@@ -20,23 +20,49 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasCompletedWorksLoadingWindow = false;
         let hasStartedProjectsLoad = false;
 
-        const worksLoadingState = document.getElementById('worksLoadingState');
+        const getWorksLoadingState = () => document.getElementById('worksLoadingState');
         const notifyWorksLoadingState = (isLoading) => {
             const eventName = isLoading ? 'works:initial-loading-start' : 'works:initial-loading-complete';
             window.dispatchEvent(new CustomEvent(eventName));
         };
 
+        const waitForNextPaint = () => new Promise((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+
+        const waitForWorksLoadingStateElement = () => {
+            const existingLoader = getWorksLoadingState();
+            if (existingLoader) return Promise.resolve(existingLoader);
+
+            return new Promise((resolve) => {
+                const observer = new MutationObserver(() => {
+                    const loader = getWorksLoadingState();
+                    if (!loader) return;
+                    observer.disconnect();
+                    resolve(loader);
+                });
+
+                observer.observe(worksSection, { childList: true, subtree: true });
+            });
+        };
+
         const startWorksLoadingState = () => {
-            if (!worksLoadingState || hasStartedWorksLoadingWindow) return;
+            if (hasStartedWorksLoadingWindow) return;
             hasStartedWorksLoadingWindow = true;
-            worksLoadingState.classList.remove('is-hidden');
+            const worksLoadingState = getWorksLoadingState();
+            if (worksLoadingState) {
+                worksLoadingState.classList.remove('is-hidden');
+            }
             notifyWorksLoadingState(true);
         };
 
         const hideWorksLoadingState = () => {
-            if (!worksLoadingState || hasHiddenWorksLoader) return;
+            if (hasHiddenWorksLoader) return;
             hasHiddenWorksLoader = true;
-            worksLoadingState.classList.add('is-hidden');
+            const worksLoadingState = getWorksLoadingState();
+            if (worksLoadingState) {
+                worksLoadingState.classList.add('is-hidden');
+            }
             if (!hasCompletedWorksLoadingWindow) {
                 hasCompletedWorksLoadingWindow = true;
                 notifyWorksLoadingState(false);
@@ -216,15 +242,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const loadProjectsOnce = () => {
+        const loadProjectsOnce = async () => {
             if (hasStartedProjectsLoad) return;
             hasStartedProjectsLoad = true;
+            await waitForWorksLoadingStateElement();
             startWorksLoadingState();
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    loadProjects();
-                });
-            });
+            await waitForNextPaint();
+            loadProjects();
         };
 
         async function loadPublications() {
