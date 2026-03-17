@@ -15,6 +15,38 @@ document.addEventListener('DOMContentLoaded', () => {
         let projectSlides = [];
         let projectCurrentIndex = 0;
         let syncThumbs = () => {};
+        let hasHiddenWorksLoader = false;
+
+        const worksLoadingState = document.getElementById('worksLoadingState');
+        const hideWorksLoadingState = () => {
+            if (!worksLoadingState || hasHiddenWorksLoader) return;
+            hasHiddenWorksLoader = true;
+            worksLoadingState.classList.add('is-hidden');
+        };
+
+        const waitForImageReady = (imageElement) => {
+            if (!imageElement) return Promise.resolve();
+            if (imageElement.complete && imageElement.naturalWidth > 0) {
+                return Promise.resolve();
+            }
+            return new Promise((resolve) => {
+                const cleanup = () => {
+                    imageElement.removeEventListener('load', onLoad);
+                    imageElement.removeEventListener('error', onError);
+                };
+                const onLoad = () => {
+                    cleanup();
+                    resolve();
+                };
+                const onError = () => {
+                    cleanup();
+                    resolve();
+                };
+
+                imageElement.addEventListener('load', onLoad, { once: true });
+                imageElement.addEventListener('error', onError, { once: true });
+            });
+        };
 
         const loadProjectMainImage = (index) => {
             const targetSlide = projectSlides[index];
@@ -146,15 +178,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (projects.length === 0) {
                     projectTrack.innerHTML = '<div class="basic-text text">No visible projects found.</div>';
                     thumbTrack.innerHTML = '';
+                    hideWorksLoadingState();
                     return;
                 }
 
                 renderProjectSlides(projects);
                 initializeProjectsCarousel();
+
+                const firstSlide = projectSlides[0];
+                const firstImage = firstSlide?.querySelector('.project-image');
+                await waitForImageReady(firstImage);
+                hideWorksLoadingState();
             } catch (error) {
                 console.error(error);
                 projectTrack.innerHTML = '<div class="basic-text text">Unable to load projects right now.</div>';
                 thumbTrack.innerHTML = '';
+                hideWorksLoadingState();
             }
         }
 
