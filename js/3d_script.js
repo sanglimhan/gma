@@ -47,16 +47,36 @@ const raycaster = new THREE.Raycaster();
 const mousePosition = new THREE.Vector2();
 let lastPushTime = 0;
 
-let isBackgroundAnimationThrottled = false;
-let throttledFrameCounter = 0;
-const THROTTLED_FRAME_INTERVAL = 4;
+let animationFrameId = null;
+let isBackgroundAnimationPaused = false;
+
+function startAnimationLoop() {
+    if (animationFrameId !== null || isBackgroundAnimationPaused) return;
+    animationFrameId = requestAnimationFrame(animate);
+}
+
+function pauseBackgroundAnimation() {
+    if (isBackgroundAnimationPaused) return;
+    isBackgroundAnimationPaused = true;
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+}
+
+function resumeBackgroundAnimation() {
+    if (!isBackgroundAnimationPaused) return;
+    isBackgroundAnimationPaused = false;
+    clock.getDelta();
+    startAnimationLoop();
+}
 
 window.addEventListener('works:initial-loading-start', () => {
-    isBackgroundAnimationThrottled = true;
+    pauseBackgroundAnimation();
 });
 
 window.addEventListener('works:initial-loading-complete', () => {
-    isBackgroundAnimationThrottled = false;
+    resumeBackgroundAnimation();
 });
 
 //initialization
@@ -69,7 +89,7 @@ function init() {
     createWorldObjects();
     createDynamicObjects();
     clock = new THREE.Clock();
-    animate();
+    startAnimationLoop();
 }
 
 function setupScene() {
@@ -405,17 +425,14 @@ function applyPointerPush() {
 
 
 function animate() {
-    requestAnimationFrame(animate);
+    animationFrameId = null;
+    if (isBackgroundAnimationPaused) {
+        return;
+    }
+
     const deltaTime = clock.getDelta();
     const elapsedTime = clock.elapsedTime;
-    if (!isBackgroundAnimationThrottled) {
-        world.step(PHYSICS_TIMESTEP, deltaTime, PHYSICS_MAX_SUBSTEPS);
-    } else {
-        throttledFrameCounter = (throttledFrameCounter + 1) % THROTTLED_FRAME_INTERVAL;
-        if (throttledFrameCounter === 0) {
-            world.step(PHYSICS_TIMESTEP, deltaTime, 1);
-        }
-    }
+    world.step(PHYSICS_TIMESTEP, deltaTime, PHYSICS_MAX_SUBSTEPS);
 
     const lightAnimationTime = elapsedTime * 0.1;
     animatedDirectionalLights.forEach(lightData => {
@@ -434,15 +451,9 @@ function animate() {
         }
     });
 
-    if (!isBackgroundAnimationThrottled) {
-        applyPointerPush(); // 탭 인터랙션으로 변경했다면 여기서 호출 안 함
-        renderer.render(scene, camera);
-        return;
-    }
-
-    if (throttledFrameCounter === 0) {
-        renderer.render(scene, camera);
-    }
+    applyPointerPush(); // 탭 인터랙션으로 변경했다면 여기서 호출 안 함
+    renderer.render(scene, camera);
+    startAnimationLoop();
 }
 // --- START ---
 init();
