@@ -16,6 +16,23 @@ document.addEventListener('DOMContentLoaded', () => {
         let projectCurrentIndex = 0;
         let syncThumbs = () => {};
 
+        const loadProjectMainImage = (index) => {
+            const targetSlide = projectSlides[index];
+            if (!targetSlide) return;
+
+            const targetImage = targetSlide.querySelector('.project-image');
+            if (!targetImage || targetImage.getAttribute('src')) return;
+
+            const mainImage = targetImage.dataset.mainImage || '';
+            if (!mainImage) return;
+
+            targetImage.src = mainImage;
+            targetImage.loading = index === 0 ? 'eager' : 'lazy';
+            if (index === 0) {
+                targetImage.fetchPriority = 'high';
+            }
+        };
+
         const normalizeBoolean = (value) => {
             if (typeof value === 'boolean') return value;
             if (typeof value === 'number') return value !== 0;
@@ -61,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="project-slide" data-project-id="${escapeHtml(projectId)}">
                   <div class="project-detail-layout">
                     <div class="project-image-wrapper">
-                      <img src="${project.main_image || ''}" data-full-image="${project.full_image || ''}" alt="${project.title || 'Project image'}" class="project-image">
+                      <img ${index === 0 ? `src="${project.main_image || ''}" loading="eager" fetchpriority="high"` : ''} data-main-image="${project.main_image || ''}" data-full-image="${project.full_image || ''}" alt="${project.title || 'Project image'}" class="project-image">
                     </div>
                     <div class="project-info">
                       <div class="basic-text title">${project.title || ''}</div>
@@ -226,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updateProjectsCarousel() {
             if (projectSlides.length === 0) return;
+            loadProjectMainImage(projectCurrentIndex);
             const slideWidth = projectSlides[0].offsetWidth;
             const gap = parseInt(window.getComputedStyle(projectTrack).gap) || 32;
             const moveAmount = projectCurrentIndex * (slideWidth + gap);
