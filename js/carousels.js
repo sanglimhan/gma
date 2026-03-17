@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let projectCurrentIndex = 0;
         let syncThumbs = () => {};
         let hasHiddenWorksLoader = false;
+        let hasStartedProjectsLoad = false;
 
         const worksLoadingState = document.getElementById('worksLoadingState');
         const hideWorksLoadingState = () => {
@@ -197,6 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const loadProjectsOnce = () => {
+            if (hasStartedProjectsLoad) return;
+            hasStartedProjectsLoad = true;
+            loadProjects();
+        };
+
         async function loadPublications() {
             if (!publicationList) return;
 
@@ -242,10 +249,31 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        const initiallyActiveTab = worksSection.querySelector('.menu-tab-btn.active');
-        if (initiallyActiveTab?.dataset.tab === 'projects') {
-            loadProjects();
+        const activateProjectsOnFirstWorksVisit = () => {
+            if (window.location.hash === '#works') {
+                loadProjectsOnce();
+            }
+        };
+
+        const worksNavLinks = document.querySelectorAll('a[href="#works"]');
+        worksNavLinks.forEach((link) => {
+            link.addEventListener('click', loadProjectsOnce, { once: true });
+        });
+
+        window.addEventListener('hashchange', activateProjectsOnFirstWorksVisit);
+        activateProjectsOnFirstWorksVisit();
+
+        if (window.IntersectionObserver) {
+            const worksActivationObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) return;
+                    loadProjectsOnce();
+                    observer.unobserve(entry.target);
+                });
+            }, { threshold: 0.2 });
+            worksActivationObserver.observe(worksSection);
         }
+
         loadPublications();
 
         function initializeProjectsCarousel() {
