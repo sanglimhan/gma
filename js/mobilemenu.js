@@ -21,9 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
   mobileNav.querySelectorAll('a').forEach(link=>{
     link.addEventListener('click', e=>{
       e.preventDefault();
+      const targetHash = link.getAttribute('href');
+      const targetId = decodeURIComponent(targetHash.slice(1));
+      const targetSection = document.getElementById(targetId);
+
       toggleMenu(false);                    // 닫기
-      document.querySelector(link.hash).scrollIntoView({behavior:'smooth'});
-      setActiveBottom(link.hash);           // 바텀바 active 표시
+      targetSection?.scrollIntoView({behavior:'smooth'});
+      setActiveBottom(targetHash);          // 바텀바 active 표시
     });
   });
 
