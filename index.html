@@ -205,7 +205,7 @@
       document.addEventListener('click', (event) => {
         if (!event.target.classList.contains('project-image')) return;
         modal.style.display = "block";
-        modalImg.src = event.target.src;
+        modalImg.src = event.target.dataset.fullImage || event.target.src;
       });
 
       closeBtn.onclick = function () {
