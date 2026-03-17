@@ -3,19 +3,25 @@ document.addEventListener('DOMContentLoaded', () => {
   /* === 햄버거 & 모바일 메뉴 === */
   const burger   = document.getElementById('hamburgerBtn');
   const mobileNav = document.getElementById('mobileMenu');
+  const closeBtn = document.getElementById('mobileMenuClose');
 
-  const toggleMenu = () => {
-    const isOpen = burger.classList.toggle('open');
+  const toggleMenu = (forceOpen) => {
+    const isOpen = typeof forceOpen === 'boolean'
+      ? forceOpen
+      : !burger.classList.contains('open');
+
+    burger.classList.toggle('open', isOpen);
     mobileNav.style.display = isOpen ? 'flex' : 'none';
     burger.setAttribute('aria-expanded', isOpen);
   };
 
-  burger.addEventListener('click', toggleMenu);
+  burger.addEventListener('click', () => toggleMenu());
+  closeBtn?.addEventListener('click', () => toggleMenu(false));
   /* 메뉴 항목 클릭 시 닫기 + 바텀바 active 갱신 */
   mobileNav.querySelectorAll('a').forEach(link=>{
     link.addEventListener('click', e=>{
       e.preventDefault();
-      toggleMenu();                         // 닫기
+      toggleMenu(false);                    // 닫기
       document.querySelector(link.hash).scrollIntoView({behavior:'smooth'});
       setActiveBottom(link.hash);           // 바텀바 active 표시
     });
