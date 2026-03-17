@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="project-slide">
                   <div class="project-detail-layout">
                     <div class="project-image-wrapper">
-                      <img src="${project.main_image || ''}" alt="${project.main_image_alt || project.title || ''}" class="project-image">
+                      <img src="${project.main_image || ''}" data-full-image="${project.full_image || ''}" alt="${project.title || 'Project image'}" class="project-image">
                     </div>
                     <div class="project-info">
                       <div class="basic-text title">${project.title || ''}</div>
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('');
 
             thumbTrack.innerHTML = projects.map((project, index) => `
-                <img src="${project.thumbnail || ''}" alt="${project.title || ''} thumbnail" data-index="${index}" class="thumb${index === 0 ? ' active' : ''}">
+                <img src="${project.thumbnail || ''}" alt="${project.title || ''} thumbnail" data-index="${index}" class="thumb${index === 0 ? ' active' : ''}" loading="lazy">
             `).join('');
         };
 
