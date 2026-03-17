@@ -180,6 +180,10 @@ canvas {
   text-decoration: none;
 }
 
+.mobile-nav a:hover {
+  color: var(--highlight-color);
+}
+
 /* ---------------- 스티키 바텀바 모바일 변형 ---------------- */
 @media (max-width:670px) {
   .hamburger {
@@ -190,6 +194,8 @@ canvas {
     justify-content: flex-start;
     padding: calc(var(--header-height) + 2rem) 1.5rem calc(var(--footer-height) + 5.5rem);
     box-sizing: border-box;
+    z-index: 220;
+    pointer-events: auto;
   }
 
   .mobile-nav-close {
@@ -901,6 +907,10 @@ section {
   .header-text.title {
     line-height: 0.9;
     letter-spacing: 0.1em
+  }
+
+  .header-text.title .title-mobile-break {
+    display: block;
   }
 
   .header-text.tagline {
