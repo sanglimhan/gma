@@ -15,7 +15,6 @@ const LIGHT_SHADOW_CAMERA_FRUSTUM_SIZE = 50;
 const PHYSICS_SOLVER_ITERATIONS = 10;
 const PHYSICS_TIMESTEP = 1 / 60;
 const PHYSICS_MAX_SUBSTEPS = 3;
-const WORKS_RENDER_INTERVAL_MS = 250;
 const ANGULAR_DAMPING = 0.8;
 const LINEAR_DAMPING = 0;
 const OBJECT_WORLD_FRICTION = 0.1;
@@ -33,8 +32,6 @@ let clock;
 const animatedDirectionalLights = [];
 const baseLightAngles = [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2];
 let frustumHeight, frustumWidth, halfW, halfH, wallHeightBoundary, baseObjectSize;
-let isWorksSectionActive = false;
-let lastWorksRenderTimestamp = 0;
 
 //physics
 let groundMesh, groundBody;
@@ -324,25 +321,6 @@ function setupEventListeners() {
     window.addEventListener('mousemove', onPointerMove); // 이름 변경: onMouseMove -> onPointerMove
     // 모바일 터치 시작 리스너
     window.addEventListener('touchstart', onTouchStart, { passive: false }); // passive:false는 preventDefault를 위함 (필요시)
-    setupWorksObserver();
-}
-
-function setupWorksObserver() {
-    const worksSection = document.getElementById('works');
-    if (!worksSection) return;
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            isWorksSectionActive = entry.isIntersecting;
-            if (!isWorksSectionActive) {
-                lastWorksRenderTimestamp = 0;
-            }
-        });
-    }, {
-        threshold: 0.35
-    });
-
-    observer.observe(worksSection);
 }
 
 // 이름 변경: onMouseMove -> onPointerMove
@@ -414,19 +392,9 @@ function applyPointerPush() {
 // --- ANIMATION LOOP ---
 
 
-function animate(now = 0) {
+function animate() {
     requestAnimationFrame(animate);
     const deltaTime = clock.getDelta();
-
-    if (isWorksSectionActive) {
-        if (now - lastWorksRenderTimestamp < WORKS_RENDER_INTERVAL_MS) {
-            return;
-        }
-        lastWorksRenderTimestamp = now;
-        renderer.render(scene, camera);
-        return;
-    }
-
     const elapsedTime = clock.elapsedTime;
     world.step(PHYSICS_TIMESTEP, deltaTime, PHYSICS_MAX_SUBSTEPS);
 
