@@ -220,22 +220,34 @@ canvas {
     bottom: calc(var(--footer-height) + 10px);
   }
 
+  .nav-bottom-inner {
+    min-height: 2.25rem;
+    padding: 0 0.5rem;
+    align-items: center;
+  }
+
   .nav-bottom a {
-    padding: .6rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    padding: 0.25rem 0;
+    line-height: 1;
   }
 
   .nav-bottom a i {
-    font-size: 1.6rem;
+    font-size: 1.35rem;
   }
 
   /* 활성 항목만 라벨 보여주기 */
   .nav-bottom a.active .label {
     display: block;
-    font-size: .75rem;
+    font-size: .68rem;
   }
 
   .section-bg {
-    margin-bottom: calc(var(--footer-height) + 3rem);
+    margin-bottom: calc(var(--footer-height) + 4.25rem);
   }
 }
 
