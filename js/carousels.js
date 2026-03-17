@@ -5,10 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const worksTabContents = worksSection.querySelectorAll('.menu-tab-content');
         const projectTrack = document.getElementById('projectTrack');
         const thumbTrack = document.getElementById('thumbTrack');
+        const publicationList = document.getElementById('publicationList');
         const projectPrevBtn = document.getElementById('projectPrevBtn');
         const projectNextBtn = document.getElementById('projectNextBtn');
 
-        const PROJECTS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbylw7ICcjiNh8tZTtHw8hUYUrHT8yxGytQYlrnydEsCvY-aijCqH2wkoumHrQGETX8W/exec';
+        const PROJECTS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbylw7ICcjiNh8tZTtHw8hUYUrHT8yxGytQYlrnydEsCvY-aijCqH2wkoumHrQGETX8W/exec?sheet=projects';
+        const PUBLICATIONS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbylw7ICcjiNh8tZTtHw8hUYUrHT8yxGytQYlrnydEsCvY-aijCqH2wkoumHrQGETX8W/exec?sheet=publications';
 
         let projectSlides = [];
         let projectCurrentIndex = 0;
@@ -20,6 +22,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return String(value || '').toLowerCase() === 'true';
         };
 
+        const escapeHtml = (value) => String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const parseListField = (value) => String(value || '')
+            .split(/[;,]/)
+            .map(item => item.trim())
+            .filter(Boolean);
+
         const getProjectsFromResponse = (payload) => {
             if (Array.isArray(payload)) return payload;
             if (Array.isArray(payload?.data)) return payload.data;
@@ -28,11 +42,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return [];
         };
 
+        const getGenericItemsFromResponse = (payload) => {
+            if (Array.isArray(payload)) return payload;
+            if (Array.isArray(payload?.data)) return payload.data;
+            if (Array.isArray(payload?.items)) return payload.items;
+            if (Array.isArray(payload?.publications)) return payload.publications;
+            return [];
+        };
+
+        const getProjectId = (project, index) => String(project?.id || project?.project_id || `project-${index}`);
+
         const renderProjectSlides = (projects) => {
             if (!projectTrack || !thumbTrack) return;
 
-            projectTrack.innerHTML = projects.map(project => `
-                <div class="project-slide">
+            projectTrack.innerHTML = projects.map((project, index) => {
+                const projectId = getProjectId(project, index);
+                return `
+                <div class="project-slide" data-project-id="${escapeHtml(projectId)}">
                   <div class="project-detail-layout">
                     <div class="project-image-wrapper">
                       <img src="${project.main_image || ''}" data-full-image="${project.full_image || ''}" alt="${project.title || 'Project image'}" class="project-image">
@@ -47,11 +73,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                   </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             thumbTrack.innerHTML = projects.map((project, index) => `
-                <img src="${project.thumbnail || ''}" alt="${project.title || ''} thumbnail" data-index="${index}" class="thumb${index === 0 ? ' active' : ''}" loading="lazy">
+                <img src="${project.thumbnail || ''}" alt="${project.title || ''} thumbnail" data-index="${index}" data-project-id="${escapeHtml(getProjectId(project, index))}" class="thumb${index === 0 ? ' active' : ''}" loading="lazy">
             `).join('');
+        };
+
+        const formatHighlightedAuthors = (authors, highlightAuthors) => {
+            const authorList = parseListField(authors);
+            const highlightSet = new Set(parseListField(highlightAuthors).map(name => name.toLowerCase()));
+
+            if (authorList.length === 0) return '';
+
+            return authorList.map((name) => {
+                const safeName = escapeHtml(name);
+                return highlightSet.has(name.toLowerCase()) ? `<span class="bold">${safeName}</span>` : safeName;
+            }).join(', ');
+        };
+
+        const renderPublications = (publications) => {
+            if (!publicationList) return;
+
+            publicationList.innerHTML = publications.map((publication) => {
+                const title = escapeHtml(publication.title);
+                const link = escapeHtml(publication.link);
+                const authors = formatHighlightedAuthors(publication.authors, publication.highlight_authors);
+                const venueYear = [publication.venue, publication.year].filter(Boolean).map(escapeHtml).join(', ');
+                const keywords = escapeHtml(publication.keywords);
+
+                return `
+                <li class="list-item">
+                  <span class="basic-text title"><a href="${link || '#'}" target="_blank" rel="noopener noreferrer">${title}</a></span>
+                  <span class="basic-text text">${authors}</span>
+                  <span class="basic-text subtitle">${venueYear}</span>
+                  <span class="basic-text text"><span class="bold">Keyword: </span>${keywords}</span>
+                </li>
+                `;
+            }).join('');
         };
 
         async function loadProjects() {
@@ -81,6 +141,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        async function loadPublications() {
+            if (!publicationList) return;
+
+            try {
+                const response = await fetch(PUBLICATIONS_ENDPOINT);
+                if (!response.ok) throw new Error(`Failed to fetch publications: ${response.status}`);
+                const payload = await response.json();
+
+                const publications = getGenericItemsFromResponse(payload)
+                    .filter(item => normalizeBoolean(item.visible))
+                    .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+
+                if (publications.length === 0) {
+                    publicationList.innerHTML = '<li class="list-item"><span class="basic-text text">No visible publications found.</span></li>';
+                    return;
+                }
+
+                renderPublications(publications);
+            } catch (error) {
+                console.error(error);
+                publicationList.innerHTML = '<li class="list-item"><span class="basic-text text">Unable to load publications right now.</span></li>';
+            }
+        }
+
         worksTabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 worksTabButtons.forEach(btn => btn.classList.remove('active'));
@@ -106,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (initiallyActiveTab?.dataset.tab === 'projects') {
             loadProjects();
         }
+        loadPublications();
 
         function initializeProjectsCarousel() {
             if (!projectTrack || !projectPrevBtn || !projectNextBtn) return;
@@ -130,7 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             refreshedThumbs.forEach(t => {
                 t.addEventListener('click', () => {
-                    projectCurrentIndex = +t.dataset.index;
+                    const clickedProjectId = String(t.dataset.projectId || '');
+                    const targetIndex = projectSlides.findIndex(slide => String(slide.dataset.projectId || '') === clickedProjectId);
+                    projectCurrentIndex = targetIndex >= 0 ? targetIndex : +t.dataset.index;
                     updateProjectsCarousel();
                     syncThumbs();
                 });
