@@ -198,26 +198,20 @@
     </div>
 
     <script>
-      // 필요한 HTML 요소들을 가져옵니다.
       const modal = document.getElementById("imageModal");
       const modalImg = document.getElementById("modalImage");
-      const images = document.querySelectorAll('.project-image');
       const closeBtn = document.querySelector(".close-btn");
 
-      // 모든 .project-image에 대해 클릭 이벤트를 추가합니다.
-      images.forEach(img => {
-        img.onclick = function () {
-          modal.style.display = "block"; // 모달을 화면에 표시합니다.
-          modalImg.src = this.src;       // 클릭된 이미지의 주소를 모달 이미지의 주소로 설정합니다.
-        }
+      document.addEventListener('click', (event) => {
+        if (!event.target.classList.contains('project-image')) return;
+        modal.style.display = "block";
+        modalImg.src = event.target.src;
       });
 
-      // X 버튼을 클릭하면 모달을 닫습니다.
       closeBtn.onclick = function () {
         modal.style.display = "none";
       }
 
-      // 모달 배경을 클릭해도 모달이 닫히도록 합니다.
       window.onclick = function (event) {
         if (event.target == modal) {
           modal.style.display = "none";

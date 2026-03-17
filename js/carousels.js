@@ -3,6 +3,83 @@ document.addEventListener('DOMContentLoaded', () => {
     if (worksSection) {
         const worksTabButtons = worksSection.querySelectorAll('.menu-tab-btn');
         const worksTabContents = worksSection.querySelectorAll('.menu-tab-content');
+        const projectTrack = document.getElementById('projectTrack');
+        const thumbTrack = document.getElementById('thumbTrack');
+        const projectPrevBtn = document.getElementById('projectPrevBtn');
+        const projectNextBtn = document.getElementById('projectNextBtn');
+
+        const PROJECTS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbylw7ICcjiNh8tZTtHw8hUYUrHT8yxGytQYlrnydEsCvY-aijCqH2wkoumHrQGETX8W/exec';
+
+        let projectSlides = [];
+        let projectCurrentIndex = 0;
+        let syncThumbs = () => {};
+
+        const normalizeBoolean = (value) => {
+            if (typeof value === 'boolean') return value;
+            if (typeof value === 'number') return value !== 0;
+            return String(value || '').toLowerCase() === 'true';
+        };
+
+        const getProjectsFromResponse = (payload) => {
+            if (Array.isArray(payload)) return payload;
+            if (Array.isArray(payload?.data)) return payload.data;
+            if (Array.isArray(payload?.projects)) return payload.projects;
+            if (Array.isArray(payload?.items)) return payload.items;
+            return [];
+        };
+
+        const renderProjectSlides = (projects) => {
+            if (!projectTrack || !thumbTrack) return;
+
+            projectTrack.innerHTML = projects.map(project => `
+                <div class="project-slide">
+                  <div class="project-detail-layout">
+                    <div class="project-image-wrapper">
+                      <img src="${project.main_image || ''}" alt="${project.main_image_alt || project.title || ''}" class="project-image">
+                    </div>
+                    <div class="project-info">
+                      <div class="basic-text title">${project.title || ''}</div>
+                      <div class="basic-text tagline">${[project.medium, project.year].filter(Boolean).join(', ')}</div>
+                      <div class="basic-text text">${project.description || ''}</div>
+                      <br>
+                      <div class="basic-text tagline">* Click image for full view</div>
+                      <div class="basic-text tagline"><span class="bold">Learn more: </span><a href="${project.related_link || '#'}" target="_blank" rel="noopener noreferrer">related link</a></div>
+                    </div>
+                  </div>
+                </div>
+            `).join('');
+
+            thumbTrack.innerHTML = projects.map((project, index) => `
+                <img src="${project.thumbnail || ''}" alt="${project.title || ''} thumbnail" data-index="${index}" class="thumb${index === 0 ? ' active' : ''}">
+            `).join('');
+        };
+
+        async function loadProjects() {
+            if (!projectTrack || !thumbTrack) return;
+
+            try {
+                const response = await fetch(PROJECTS_ENDPOINT);
+                if (!response.ok) throw new Error(`Failed to fetch projects: ${response.status}`);
+                const payload = await response.json();
+
+                const projects = getProjectsFromResponse(payload)
+                    .filter(project => normalizeBoolean(project.visible))
+                    .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+
+                if (projects.length === 0) {
+                    projectTrack.innerHTML = '<div class="basic-text text">No visible projects found.</div>';
+                    thumbTrack.innerHTML = '';
+                    return;
+                }
+
+                renderProjectSlides(projects);
+                initializeProjectsCarousel();
+            } catch (error) {
+                console.error(error);
+                projectTrack.innerHTML = '<div class="basic-text text">Unable to load projects right now.</div>';
+                thumbTrack.innerHTML = '';
+            }
+        }
 
         worksTabButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -27,17 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const initiallyActiveTab = worksSection.querySelector('.menu-tab-btn.active');
         if (initiallyActiveTab?.dataset.tab === 'projects') {
-            setTimeout(() => {
-                initializeProjectsCarousel();
-            }, 50);
+            loadProjects();
         }
-
-        const projectTrack = document.getElementById('projectTrack');
-        const projectPrevBtn = document.getElementById('projectPrevBtn');
-        const projectNextBtn = document.getElementById('projectNextBtn');
-        let projectSlides = [];
-        let projectCurrentIndex = 0;
-        let syncThumbs = () => {};
 
         function initializeProjectsCarousel() {
             if (!projectTrack || !projectPrevBtn || !projectNextBtn) return;
@@ -46,13 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
             projectCurrentIndex = 0;
             updateProjectsCarousel();
 
-            const existingThumbs = Array.from(document.querySelectorAll('.thumb'));
+            const existingThumbs = Array.from(thumbTrack.querySelectorAll('.thumb'));
             existingThumbs.forEach(t => {
                 const clone = t.cloneNode(true);
                 t.replaceWith(clone);
             });
 
-            const refreshedThumbs = Array.from(document.querySelectorAll('.thumb'));
+            const refreshedThumbs = Array.from(thumbTrack.querySelectorAll('.thumb'));
 
             syncThumbs = () => {
                 refreshedThumbs.forEach((t, i) =>
@@ -66,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateProjectsCarousel();
                     syncThumbs();
                 });
-            });   
+            });
         }
 
         function updateProjectsCarousel() {
@@ -94,11 +162,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateProjectsCarousel();
                 }
             });
-            
+
             window.addEventListener('resize', initializeProjectsCarousel);
         }
     }
-  
+
     const peopleSection = document.getElementById('people');
     if (peopleSection) {
         const peopleTabButtons = peopleSection.querySelectorAll('.menu-tab-btn');
@@ -163,5 +231,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
- 
+
 });
