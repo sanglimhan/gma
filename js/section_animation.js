@@ -18,13 +18,4 @@ document.addEventListener('DOMContentLoaded', () => {
       const observer = new IntersectionObserver(intersectionCallback, observerOptions);
       sectionsToObserve.forEach(section => observer.observe(section));
   }
-
-  // --- Navigation Active State ---
-  const bottomNavLinks = document.querySelectorAll('.nav-bottom a');
-  bottomNavLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-      bottomNavLinks.forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-    });
-  });
 });

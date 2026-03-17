@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-
   /* === 햄버거 & 모바일 메뉴 === */
-  const burger   = document.getElementById('hamburgerBtn');
+  const burger = document.getElementById('hamburgerBtn');
   const mobileNav = document.getElementById('mobileMenu');
   const closeBtn = document.getElementById('mobileMenuClose');
 
@@ -17,33 +16,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
   burger.addEventListener('click', () => toggleMenu());
   closeBtn?.addEventListener('click', () => toggleMenu(false));
-  /* 메뉴 항목 클릭 시 닫기 + 바텀바 active 갱신 */
-  mobileNav.querySelectorAll('a').forEach(link=>{
-    link.addEventListener('click', e=>{
-      e.preventDefault();
-      const targetHash = link.getAttribute('href');
-      const targetId = decodeURIComponent(targetHash.slice(1));
-      const targetSection = document.getElementById(targetId);
 
-      toggleMenu(false);                    // 닫기
-      targetSection?.scrollIntoView({behavior:'smooth'});
-      setActiveBottom(targetHash);          // 바텀바 active 표시
-    });
-  });
+  const allNavLinks = document.querySelectorAll('.mobile-nav a, .nav-bottom a');
+  const validHashes = new Set(Array.from(allNavLinks, (link) => link.getAttribute('href')));
 
-  /* === 바텀바 active 표시 === */
-  const bottomLinks = document.querySelectorAll('.nav-bottom a');
+  const normalizeHash = (rawHash) => {
+    if (!rawHash) return '';
+    if (rawHash.startsWith('#')) {
+      return `#${decodeURIComponent(rawHash.slice(1))}`;
+    }
+    return `#${decodeURIComponent(rawHash)}`;
+  };
+
   const setActiveBottom = (targetHash) => {
-    bottomLinks.forEach(a=>{
-      a.classList.toggle('active', a.getAttribute('href')===targetHash);
+    document.querySelectorAll('.nav-bottom a').forEach((link) => {
+      link.classList.toggle('active', link.getAttribute('href') === targetHash);
     });
   };
-  bottomLinks.forEach(a=>{
-    a.addEventListener('click', e=>{
-      setActiveBottom(a.getAttribute('href'));
+
+  const applyHashRoute = (rawHash, options = {}) => {
+    const { scrollBehavior = 'auto' } = options;
+    const normalizedHash = normalizeHash(rawHash);
+    const targetHash = validHashes.has(normalizedHash) ? normalizedHash : '#intro';
+
+    setActiveBottom(targetHash);
+
+    const targetId = decodeURIComponent(targetHash.slice(1));
+    const targetSection = document.getElementById(targetId);
+
+    if (targetSection && normalizedHash) {
+      targetSection.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
+    }
+  };
+
+  /* 메뉴 항목 클릭 시 닫기 + 해시 라우팅 */
+  mobileNav.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetHash = link.getAttribute('href');
+
+      toggleMenu(false);
+
+      if (window.location.hash === targetHash) {
+        applyHashRoute(targetHash, { scrollBehavior: 'smooth' });
+        return;
+      }
+
+      window.location.hash = targetHash;
     });
   });
 
-  /* 최초 페이지 로드 시 초기 active */
-  setActiveBottom(window.location.hash || '#about');
+  /* 해시 변경 시 섹션/active 동기화 */
+  window.addEventListener('hashchange', () => {
+    applyHashRoute(window.location.hash, { scrollBehavior: 'auto' });
+  });
+
+  /* 최초 페이지 로드 시 초기 라우팅 */
+  applyHashRoute(window.location.hash, { scrollBehavior: 'auto' });
 });
