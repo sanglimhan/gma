@@ -1,7 +1,13 @@
 <section id="people" class="fade-in-section section-box">
   <div class="section-bg">
-    <div class="split-container">
-      <div class="split-left">
+    <div class="menu-tab">
+      <button class="menu-tab-btn" data-tab="pi">PI</button>
+      <button class="menu-tab-btn active" data-tab="students">Graduate Students</button>
+      <button class="menu-tab-btn" data-tab="alumni">Alumni</button>
+      <button class="menu-tab-btn" data-tab="collaborators">Collaborators</button>
+    </div>
+    <div class="menu-content-container">
+      <div id="piContent" class="menu-tab-content">
         <div class="supervisor-profile">
           <div class="basic-text title"><span class="bold">Professor</span></div>
           <div class="supervisor-image-wrapper">
@@ -21,14 +27,7 @@
           </div>
         </div>
       </div>
-      <div class="split-right">
-        <div class="menu-tab">
-          <button class="menu-tab-btn active" data-tab="students">Graduate Students</button>
-          <button class="menu-tab-btn" data-tab="alumni">Alumni</button>
-          <button class="menu-tab-btn" data-tab="collaborators">Collaborators</button>
-        </div>
-        <div class="menu-content-container">
-          <div id="studentsContent" class="menu-tab-content active">
+      <div id="studentsContent" class="menu-tab-content active">
             <div class="carousel-container">
               <button id="studentPrevBtn" class="carousel-arrow prev" aria-label="Previous profile">‹‹</button>
               <div class="carousel-wrapper">
@@ -89,8 +88,8 @@
               </div>
               <button id="studentNextBtn" class="carousel-arrow next" aria-label="Next profile">››</button>
             </div>
-          </div>
-          <div id="alumniContent" class="menu-tab-content">
+      </div>
+      <div id="alumniContent" class="menu-tab-content">
             <ul class="alumni-list">
               <li class="people-item">
                 <div class="alumni-info">
@@ -146,8 +145,8 @@
               </li>
 
             </ul>
-          </div>
-          <div id="collaboratorsContent" class="menu-tab-content">
+      </div>
+      <div id="collaboratorsContent" class="menu-tab-content">
             <ul class="collaborator-list">
               <li class="list-item">
                 <span class="people-text name">Dr. Pepper Pepper</span>
@@ -166,8 +165,6 @@
                 <span class="people-text affiliation">Professor at Hello University</span>
               </li>
             </ul>
-          </div>
-        </div>
       </div>
     </div>
   </div>
