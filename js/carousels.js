@@ -16,13 +16,31 @@ document.addEventListener('DOMContentLoaded', () => {
         let projectCurrentIndex = 0;
         let syncThumbs = () => {};
         let hasHiddenWorksLoader = false;
+        let hasStartedWorksLoadingWindow = false;
+        let hasCompletedWorksLoadingWindow = false;
         let hasStartedProjectsLoad = false;
 
         const worksLoadingState = document.getElementById('worksLoadingState');
+        const notifyWorksLoadingState = (isLoading) => {
+            const eventName = isLoading ? 'works:initial-loading-start' : 'works:initial-loading-complete';
+            window.dispatchEvent(new CustomEvent(eventName));
+        };
+
+        const startWorksLoadingState = () => {
+            if (!worksLoadingState || hasStartedWorksLoadingWindow) return;
+            hasStartedWorksLoadingWindow = true;
+            worksLoadingState.classList.remove('is-hidden');
+            notifyWorksLoadingState(true);
+        };
+
         const hideWorksLoadingState = () => {
             if (!worksLoadingState || hasHiddenWorksLoader) return;
             hasHiddenWorksLoader = true;
             worksLoadingState.classList.add('is-hidden');
+            if (!hasCompletedWorksLoadingWindow) {
+                hasCompletedWorksLoadingWindow = true;
+                notifyWorksLoadingState(false);
+            }
         };
 
         const waitForImageReady = (imageElement) => {
@@ -201,7 +219,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadProjectsOnce = () => {
             if (hasStartedProjectsLoad) return;
             hasStartedProjectsLoad = true;
-            loadProjects();
+            startWorksLoadingState();
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    loadProjects();
+                });
+            });
         };
 
         async function loadPublications() {

@@ -47,6 +47,18 @@ const raycaster = new THREE.Raycaster();
 const mousePosition = new THREE.Vector2();
 let lastPushTime = 0;
 
+let isBackgroundAnimationThrottled = false;
+let throttledFrameCounter = 0;
+const THROTTLED_FRAME_INTERVAL = 4;
+
+window.addEventListener('works:initial-loading-start', () => {
+    isBackgroundAnimationThrottled = true;
+});
+
+window.addEventListener('works:initial-loading-complete', () => {
+    isBackgroundAnimationThrottled = false;
+});
+
 //initialization
 function init() {
     setupScene();
@@ -396,7 +408,14 @@ function animate() {
     requestAnimationFrame(animate);
     const deltaTime = clock.getDelta();
     const elapsedTime = clock.elapsedTime;
-    world.step(PHYSICS_TIMESTEP, deltaTime, PHYSICS_MAX_SUBSTEPS);
+    if (!isBackgroundAnimationThrottled) {
+        world.step(PHYSICS_TIMESTEP, deltaTime, PHYSICS_MAX_SUBSTEPS);
+    } else {
+        throttledFrameCounter = (throttledFrameCounter + 1) % THROTTLED_FRAME_INTERVAL;
+        if (throttledFrameCounter === 0) {
+            world.step(PHYSICS_TIMESTEP, deltaTime, 1);
+        }
+    }
 
     const lightAnimationTime = elapsedTime * 0.1;
     animatedDirectionalLights.forEach(lightData => {
@@ -415,8 +434,15 @@ function animate() {
         }
     });
 
-    applyPointerPush(); // 탭 인터랙션으로 변경했다면 여기서 호출 안 함
-    renderer.render(scene, camera);
+    if (!isBackgroundAnimationThrottled) {
+        applyPointerPush(); // 탭 인터랙션으로 변경했다면 여기서 호출 안 함
+        renderer.render(scene, camera);
+        return;
+    }
+
+    if (throttledFrameCounter === 0) {
+        renderer.render(scene, camera);
+    }
 }
 // --- START ---
 init();
