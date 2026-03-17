@@ -51,6 +51,11 @@
   <footer class="footer-bar">
     &copy; 2025 Generative Media Art Lab + Studio — Chung-Ang University
   </footer>
+
+  <div id="worksGlobalLoadingOverlay" class="works-global-loading-overlay is-hidden" aria-live="polite" aria-label="Loading works">
+    <div class="works-global-loading-spinner" aria-hidden="true"></div>
+    <span class="basic-text text">Loading works...</span>
+  </div>
   <div class="section-container">
     <section id="intro" class="fade-in-section section-box">
       <div class="intro-section">
@@ -183,6 +188,43 @@
         .then(res => res.text())
         .then(html => {document.getElementById('people').innerHTML = html});
 
+    </script>
+
+
+    <script>
+      (() => {
+        const worksOverlay = document.getElementById('worksGlobalLoadingOverlay');
+        if (!worksOverlay) return;
+
+        const showWorksOverlay = () => {
+          worksOverlay.classList.remove('is-hidden');
+        };
+
+        const hideWorksOverlay = () => {
+          worksOverlay.classList.add('is-hidden');
+        };
+
+        const handleWorksNavIntent = (event) => {
+          const link = event.target.closest('a[href="#works"]');
+          if (!link) return;
+          showWorksOverlay();
+        };
+
+        document.addEventListener('click', handleWorksNavIntent, true);
+
+        window.addEventListener('hashchange', () => {
+          if (window.location.hash === '#works') {
+            showWorksOverlay();
+          }
+        });
+
+        if (window.location.hash === '#works') {
+          showWorksOverlay();
+        }
+
+        window.addEventListener('works:initial-loading-start', showWorksOverlay);
+        window.addEventListener('works:initial-loading-complete', hideWorksOverlay);
+      })();
     </script>
 
     <script type="module" src="js/3d_script.js"></script>

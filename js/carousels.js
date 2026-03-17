@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasCompletedWorksLoadingWindow = false;
         let hasStartedProjectsLoad = false;
 
-        const getWorksLoadingState = () => document.getElementById('worksLoadingState');
         const notifyWorksLoadingState = (isLoading) => {
             const eventName = isLoading ? 'works:initial-loading-start' : 'works:initial-loading-complete';
             window.dispatchEvent(new CustomEvent(eventName));
@@ -30,39 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
             requestAnimationFrame(() => requestAnimationFrame(resolve));
         });
 
-        const waitForWorksLoadingStateElement = () => {
-            const existingLoader = getWorksLoadingState();
-            if (existingLoader) return Promise.resolve(existingLoader);
-
-            return new Promise((resolve) => {
-                const observer = new MutationObserver(() => {
-                    const loader = getWorksLoadingState();
-                    if (!loader) return;
-                    observer.disconnect();
-                    resolve(loader);
-                });
-
-                observer.observe(worksSection, { childList: true, subtree: true });
-            });
-        };
-
         const startWorksLoadingState = () => {
             if (hasStartedWorksLoadingWindow) return;
             hasStartedWorksLoadingWindow = true;
-            const worksLoadingState = getWorksLoadingState();
-            if (worksLoadingState) {
-                worksLoadingState.classList.remove('is-hidden');
-            }
             notifyWorksLoadingState(true);
         };
 
         const hideWorksLoadingState = () => {
             if (hasHiddenWorksLoader) return;
             hasHiddenWorksLoader = true;
-            const worksLoadingState = getWorksLoadingState();
-            if (worksLoadingState) {
-                worksLoadingState.classList.add('is-hidden');
-            }
             if (!hasCompletedWorksLoadingWindow) {
                 hasCompletedWorksLoadingWindow = true;
                 notifyWorksLoadingState(false);
@@ -245,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadProjectsOnce = async () => {
             if (hasStartedProjectsLoad) return;
             hasStartedProjectsLoad = true;
-            await waitForWorksLoadingStateElement();
             startWorksLoadingState();
             await waitForNextPaint();
             loadProjects();
