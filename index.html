@@ -130,8 +130,8 @@
         </div>
       </div>
     </section>
-    <div id="works"></div>
-    <div id="people"></div>
+    <div id="worksMount"></div>
+    <div id="peopleMount"></div>
 
 
       <section id="updates" class="fade-in-section section-box">
@@ -181,12 +181,23 @@
 
     <script>
 
-      fetch('html/works.html')
-        .then(res => res.text())
-        .then(html => {document.getElementById('works').innerHTML = html});
-      fetch('html/people.html')
-        .then(res => res.text())
-        .then(html => {document.getElementById('people').innerHTML = html});
+      const mountSection = (url, mountId) => (
+        fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const mountNode = document.getElementById(mountId);
+            if (mountNode) {
+              mountNode.innerHTML = html;
+            }
+          })
+      );
+
+      Promise.all([
+        mountSection('html/works.html', 'worksMount'),
+        mountSection('html/people.html', 'peopleMount')
+      ]).finally(() => {
+        window.dispatchEvent(new Event('site:sections-mounted'));
+      });
 
     </script>
 

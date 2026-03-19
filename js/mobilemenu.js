@@ -71,6 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
     applyHashRoute(window.location.hash, { scrollBehavior: 'auto' });
   });
 
+  /* 동적 섹션 로드 이후 현재 해시에 맞춰 재동기화 */
+  window.addEventListener('site:sections-mounted', () => {
+    applyHashRoute(window.location.hash, { scrollBehavior: 'auto' });
+  });
+
   /* 최초 페이지 로드 시 초기 라우팅 */
   applyHashRoute(window.location.hash, { scrollBehavior: 'auto' });
 });
