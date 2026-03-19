@@ -15,9 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let projectSlides = [];
         let projectCurrentIndex = 0;
         let syncThumbs = () => {};
-        let hasHiddenWorksLoader = false;
-        let hasStartedWorksLoadingWindow = false;
-        let hasCompletedWorksLoadingWindow = false;
+        let hasActiveWorksLoadingState = false;
         let hasStartedProjectsLoad = false;
 
         const notifyWorksLoadingState = (isLoading) => {
@@ -30,18 +28,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const startWorksLoadingState = () => {
-            if (hasStartedWorksLoadingWindow) return;
-            hasStartedWorksLoadingWindow = true;
+            if (hasActiveWorksLoadingState) return;
+            hasActiveWorksLoadingState = true;
             notifyWorksLoadingState(true);
         };
 
         const hideWorksLoadingState = () => {
-            if (hasHiddenWorksLoader) return;
-            hasHiddenWorksLoader = true;
-            if (!hasCompletedWorksLoadingWindow) {
-                hasCompletedWorksLoadingWindow = true;
-                notifyWorksLoadingState(false);
-            }
+            if (!hasActiveWorksLoadingState) return;
+            hasActiveWorksLoadingState = false;
+            notifyWorksLoadingState(false);
+        };
+
+        const isWorksContentReady = () => {
+            if (!projectTrack) return false;
+
+            const hasCachedSlides = projectSlides.length > 0;
+            const hasRenderedTrackChildren = projectTrack.children.length > 0;
+            const firstMainImage = projectTrack.querySelector('.project-slide .project-image');
+            const isFirstMainImageLoaded = Boolean(
+                firstMainImage
+                && firstMainImage.getAttribute('src')
+                && firstMainImage.complete
+                && firstMainImage.naturalWidth > 0
+            );
+
+            return hasCachedSlides || hasRenderedTrackChildren || isFirstMainImageLoaded;
         };
 
         const waitForImageReady = (imageElement) => {
@@ -218,11 +229,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const loadProjectsOnce = async () => {
+            if (isWorksContentReady()) {
+                hideWorksLoadingState();
+                return;
+            }
+
             if (hasStartedProjectsLoad) return;
             hasStartedProjectsLoad = true;
             startWorksLoadingState();
             await waitForNextPaint();
-            loadProjects();
+            await loadProjects();
         };
 
         async function loadPublications() {
