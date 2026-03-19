@@ -34,12 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  const syncSectionVisibility = (targetHash) => {
+    const targetId = decodeURIComponent(targetHash.slice(1));
+    document.querySelectorAll('.fade-in-section').forEach((section) => {
+      section.classList.toggle('visible', section.id === targetId);
+    });
+  };
+
   const applyHashRoute = (rawHash, options = {}) => {
     const { scrollBehavior = 'auto' } = options;
     const normalizedHash = normalizeHash(rawHash);
     const targetHash = validHashes.has(normalizedHash) ? normalizedHash : '#intro';
 
     setActiveBottom(targetHash);
+    syncSectionVisibility(targetHash);
 
     const targetId = decodeURIComponent(targetHash.slice(1));
     const targetSection = document.getElementById(targetId);
