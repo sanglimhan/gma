@@ -458,7 +458,9 @@ const initializeSectionCarousels = () => {
             const image = student.image || 'images/student-profile.png';
             const name = student.name || '';
             const program = student.program || '';
-            const link = student.link || '';
+            const undergradDegree = student.undergraduate_degree || student.undergrad_degree || '';
+            const mastersDegree = student.masters_degree || student.master_degree || '';
+            const researchFields = areas.join(', ');
             const infoMarkup = `
                 <div class="student-image-wrapper">
                   <img src="${image}" alt="Profile of ${name || 'student'}" class="student-image">
@@ -466,13 +468,15 @@ const initializeSectionCarousels = () => {
                 <div class="student-info">
                   <div class="basic-text title">${name}</div>
                   <div class="basic-text subtitle">${program}</div>
-                  <div class="basic-text text"><br>${areas.join('<br>')}</div>
+                  <div class="basic-text text">${undergradDegree ? `Undergraduate Degree: ${undergradDegree}` : ''}</div>
+                  <div class="basic-text text">${mastersDegree ? `Master's Degree: ${mastersDegree}` : ''}</div>
+                  <div class="basic-text text">${researchFields ? `Research Fields: ${researchFields}` : ''}</div>
                 </div>
             `;
 
             return `
               <div class="student-card">
-                ${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${infoMarkup}</a>` : infoMarkup}
+                ${infoMarkup}
               </div>
             `;
         };
@@ -500,16 +504,9 @@ const initializeSectionCarousels = () => {
 
                 return `
                   <li class="people-item">
-                    <div class="alumni-info">
-                      <span class="people-text name">${name}</span>
-                      <span class="people-text degree">${degreeYear ? `(${degreeYear})` : ''}</span>
-                    </div>
-                    <div class="alumni-details">
-                      <div class="people-text affiliation">${positionAtCompany}</div>
-                      <div class="thesis-link">
-                        ${thesisLink ? `<a href="${thesisLink}" target="_blank" rel="noopener noreferrer">${thesisTitle}</a>` : thesisTitle}
-                      </div>
-                    </div>
+                    <div class="people-text name">${name}${degreeYear ? ` (${degreeYear})` : ''}</div>
+                    <div class="people-text affiliation">${positionAtCompany}</div>
+                    ${thesisTitle ? `<div class="people-text thesis">Thesis: ${thesisLink ? `<a href="${thesisLink}" target="_blank" rel="noopener noreferrer">${thesisTitle}</a>` : thesisTitle}</div>` : ''}
                   </li>
                 `;
             }).join('');
@@ -519,11 +516,15 @@ const initializeSectionCarousels = () => {
             if (!collaboratorList) return;
             collaboratorList.innerHTML = collaborators.map((item) => {
                 const name = item.name || '';
-                const positionAtCompany = [item.position, item.company].filter(Boolean).join(' at ');
+                const position = item.position || '';
+                const company = item.company || '';
+                const collaboratorLink = item.link || item.company_link || item.institution_link || '';
                 return `
                   <li class="people-item">
-                    <span class="people-text name">${name}</span>
-                    <span class="people-text affiliation">${positionAtCompany ? `— ${positionAtCompany}` : ''}</span>
+                    <div class="people-text name">Dr. ${name}</div>
+                    <div class="people-text affiliation">
+                      ${position ? `${position}${company ? ' at ' : ''}` : ''}${company ? (collaboratorLink ? `<a href="${collaboratorLink}" target="_blank" rel="noopener noreferrer">${company}</a>` : company) : ''}
+                    </div>
                   </li>
                 `;
             }).join('');
