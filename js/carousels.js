@@ -1,6 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
+let worksInitialized = false;
+let peopleInitialized = false;
+
+const initializeSectionCarousels = () => {
     const worksSection = document.getElementById('works');
-    if (worksSection) {
+    if (worksSection && !worksInitialized) {
+        worksInitialized = true;
         const worksTabButtons = worksSection.querySelectorAll('.menu-tab-btn');
         const worksTabContents = worksSection.querySelectorAll('.menu-tab-content');
         const projectTrack = document.getElementById('projectTrack');
@@ -271,29 +275,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const activateWorksTab = (tabId, { initializeCarousel = false } = {}) => {
+            worksTabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+            worksTabContents.forEach((content) => {
+                content.classList.toggle('active', content.id === `${tabId}Content`);
+            });
+
+            if (tabId === 'projects' && initializeCarousel) {
+                setTimeout(() => {
+                    initializeProjectsCarousel();
+                }, 50);
+            }
+        };
+
         worksTabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                worksTabButtons.forEach(btn => btn.classList.remove('active'));
-                worksTabContents.forEach(content => content.classList.remove('active'));
-
-                button.classList.add('active');
-
-                const contentId = button.dataset.tab;
-                const activeContent = document.getElementById(contentId + 'Content');
-
-                if (activeContent) {
-                    activeContent.classList.add('active');
-                }
-                if (contentId === 'projects') {
-                    setTimeout(() => {
-                        initializeProjectsCarousel();
-                    }, 50);
-                }
+                activateWorksTab(button.dataset.tab, { initializeCarousel: true });
             });
         });
 
-        const activateProjectsOnFirstWorksVisit = () => {
+        const activateProjectsOnWorksVisit = () => {
             if (window.location.hash === '#works') {
+                activateWorksTab('projects', { initializeCarousel: true });
                 loadProjectsOnce();
             }
         };
@@ -303,8 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
             link.addEventListener('click', loadProjectsOnce);
         });
 
-        window.addEventListener('hashchange', activateProjectsOnFirstWorksVisit);
-        activateProjectsOnFirstWorksVisit();
+        window.addEventListener('hashchange', activateProjectsOnWorksVisit);
+        activateProjectsOnWorksVisit();
 
         if (window.IntersectionObserver) {
             const worksActivationObserver = new IntersectionObserver((entries, observer) => {
@@ -383,7 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const peopleSection = document.getElementById('people');
-    if (peopleSection) {
+    if (peopleSection && !peopleInitialized) {
+        peopleInitialized = true;
         const PEOPLE_API_URL = 'https://script.google.com/macros/s/AKfycbwC2qCW-1fj0OaiZYdVjKmDBS47byiDxS7fR6BIfRVCi-ZMD2FI-xiaSpUEA5bDBG_-/exec';
         const peopleTabButtons = peopleSection.querySelectorAll('.menu-tab-btn');
         const peopleTabContents = peopleSection.querySelectorAll('.menu-tab-content');
@@ -397,19 +401,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let studentCards = [];
         let studentCurrentIndex = 0;
 
+        const activatePeopleTab = (tabId, { initializeCarousel = false } = {}) => {
+            peopleTabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+            peopleTabContents.forEach((content) => {
+                content.classList.toggle('active', content.id === `${tabId}Content`);
+            });
+            if (tabId === 'students' && initializeCarousel) {
+                setTimeout(() => initialStudentTrack(), 100);
+            }
+        };
+
         peopleTabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                peopleTabButtons.forEach(btn => btn.classList.remove('active'));
-                peopleTabContents.forEach(content => content.classList.remove('active'));
-                button.classList.add('active');
-                const contentId = button.dataset.tab;
-                const activeContent = document.getElementById(contentId + 'Content');
-                if (activeContent) {
-                    activeContent.classList.add('active');
-                }
-                if (contentId === 'students') {
-                    setTimeout(() => initialStudentTrack(), 100);
-                }
+                activatePeopleTab(button.dataset.tab, { initializeCarousel: true });
             });
         });
 
@@ -592,8 +596,20 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('resize', initialStudentTrack);
         }
 
+        const activatePiOnPeopleVisit = () => {
+            if (window.location.hash === '#people') {
+                activatePeopleTab('pi');
+            }
+        };
+
+        window.addEventListener('hashchange', activatePiOnPeopleVisit);
+        activatePiOnPeopleVisit();
+
         loadPeople();
     }
 
 
-});
+};
+
+document.addEventListener('DOMContentLoaded', initializeSectionCarousels);
+window.addEventListener('site:sections-mounted', initializeSectionCarousels);
