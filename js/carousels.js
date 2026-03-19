@@ -384,8 +384,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const peopleSection = document.getElementById('people');
     if (peopleSection) {
+        const PEOPLE_API_URL = 'https://script.google.com/macros/s/AKfycbwC2qCW-1fj0OaiZYdVjKmDBS47byiDxS7fR6BIfRVCi-ZMD2FI-xiaSpUEA5bDBG_-/exec';
         const peopleTabButtons = peopleSection.querySelectorAll('.menu-tab-btn');
         const peopleTabContents = peopleSection.querySelectorAll('.menu-tab-content');
+        const piBio = document.getElementById('piBio');
+        const studentTrack = document.getElementById('studentTrack');
+        const studentPrevBtn = document.getElementById('studentPrevBtn');
+        const studentNextBtn = document.getElementById('studentNextBtn');
+        const alumniList = document.getElementById('alumniList');
+        const collaboratorList = document.getElementById('collaboratorList');
+
+        let studentCards = [];
+        let studentCurrentIndex = 0;
 
         peopleTabButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -397,35 +407,175 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (activeContent) {
                     activeContent.classList.add('active');
                 }
+                if (contentId === 'students') {
+                    setTimeout(() => initialStudentTrack(), 100);
+                }
             });
         });
 
-        const studentTrack = document.getElementById('studentTrack');
-        const studentPrevBtn = document.getElementById('studentPrevBtn');
-        const studentNextBtn = document.getElementById('studentNextBtn');
+        const normalizeVisibility = (value) => {
+            if (typeof value === 'boolean') return value;
+            if (typeof value === 'number') return value !== 0;
+            const normalized = String(value || '').trim().toLowerCase();
+            return normalized === 'true' || normalized === '1' || normalized === 'yes';
+        };
+
+        const getItemsFromResponse = (payload) => {
+            if (Array.isArray(payload)) return payload;
+            if (Array.isArray(payload?.data)) return payload.data;
+            if (Array.isArray(payload?.items)) return payload.items;
+            return [];
+        };
+
+        const preprocessPeopleItems = (items) => {
+            if (!Array.isArray(items)) return [];
+
+            const hasVisibleField = items.some(item => Object.prototype.hasOwnProperty.call(item || {}, 'visible'));
+            const hasSortField = items.some(item => Object.prototype.hasOwnProperty.call(item || {}, 'sort_order'));
+
+            let processedItems = [...items];
+
+            if (hasVisibleField) {
+                processedItems = processedItems.filter(item => normalizeVisibility(item?.visible));
+            }
+
+            if (hasSortField) {
+                processedItems = processedItems.sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0));
+            }
+
+            return processedItems;
+        };
+
+        const buildStudentCard = (student) => {
+            const areas = [student.research_area_1, student.research_area_2, student.research_area_3]
+                .map(area => String(area || '').trim())
+                .filter(Boolean);
+
+            const image = student.image || 'images/student-profile.png';
+            const name = student.name || '';
+            const program = student.program || '';
+            const link = student.link || '';
+            const infoMarkup = `
+                <div class="student-image-wrapper">
+                  <img src="${image}" alt="Profile of ${name || 'student'}" class="student-image">
+                </div>
+                <div class="student-info">
+                  <div class="basic-text title">${name}</div>
+                  <div class="basic-text subtitle">${program}</div>
+                  <div class="basic-text text"><br>${areas.join('<br>')}</div>
+                </div>
+            `;
+
+            return `
+              <div class="student-card">
+                ${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${infoMarkup}</a>` : infoMarkup}
+              </div>
+            `;
+        };
+
+        const renderStudents = (students) => {
+            if (!studentTrack) return;
+
+            if (students.length === 0) {
+                studentTrack.innerHTML = '<div class="basic-text text">No graduate students found.</div>';
+                return;
+            }
+
+            studentTrack.innerHTML = students.map(buildStudentCard).join('');
+            initialStudentTrack();
+        };
+
+        const renderAlumni = (alumni) => {
+            if (!alumniList) return;
+            alumniList.innerHTML = alumni.map((item) => {
+                const name = item.name || '';
+                const degreeYear = [item.degree, item.year].filter(Boolean).join(', ');
+                const positionAtCompany = [item.current_position, item.company].filter(Boolean).join(' at ');
+                const thesisTitle = item.thesis_title || '';
+                const thesisLink = item.thesis_link || '';
+
+                return `
+                  <li class="people-item">
+                    <div class="alumni-info">
+                      <span class="people-text name">${name}</span>
+                      <span class="people-text degree">${degreeYear ? `(${degreeYear})` : ''}</span>
+                    </div>
+                    <div class="alumni-details">
+                      <div class="people-text affiliation">${positionAtCompany}</div>
+                      <div class="thesis-link">
+                        ${thesisLink ? `<a href="${thesisLink}" target="_blank" rel="noopener noreferrer">${thesisTitle}</a>` : thesisTitle}
+                      </div>
+                    </div>
+                  </li>
+                `;
+            }).join('');
+        };
+
+        const renderCollaborators = (collaborators) => {
+            if (!collaboratorList) return;
+            collaboratorList.innerHTML = collaborators.map((item) => {
+                const name = item.name || '';
+                const positionAtCompany = [item.position, item.company].filter(Boolean).join(' at ');
+                return `
+                  <li class="people-item">
+                    <span class="people-text name">${name}</span>
+                    <span class="people-text affiliation">${positionAtCompany ? `— ${positionAtCompany}` : ''}</span>
+                  </li>
+                `;
+            }).join('');
+        };
+
+        const renderPi = (piData) => {
+            if (!piBio) return;
+            const firstPi = piData[0] || {};
+            piBio.textContent = firstPi.bio || '';
+        };
+
+        async function fetchPeopleSheet(sheet) {
+            const response = await fetch(`${PEOPLE_API_URL}?sheet=${sheet}`);
+            if (!response.ok) throw new Error(`Failed to fetch people (${sheet}): ${response.status}`);
+            const payload = await response.json();
+            return preprocessPeopleItems(getItemsFromResponse(payload));
+        }
+
+        async function loadPeople() {
+            try {
+                const [piData, studentsData, alumniData, collaboratorsData] = await Promise.all([
+                    fetchPeopleSheet('PI'),
+                    fetchPeopleSheet('GS'),
+                    fetchPeopleSheet('Alum'),
+                    fetchPeopleSheet('Collab')
+                ]);
+
+                renderPi(piData);
+                renderStudents(studentsData);
+                renderAlumni(alumniData);
+                renderCollaborators(collaboratorsData);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        const initialStudentTrack = () => {
+            if (!studentTrack) return;
+            studentCards = Array.from(studentTrack.children);
+            studentCurrentIndex = 0;
+            updateStudentCarousel();
+        };
+
+        const updateStudentCarousel = () => {
+            if (!studentTrack || !studentPrevBtn || !studentNextBtn || studentCards.length === 0) return;
+            const cardWidth = studentCards[0].offsetWidth;
+            const gap = parseInt(window.getComputedStyle(studentTrack).gap) || 20;
+            const moveAmount = studentCurrentIndex * (cardWidth + gap);
+            studentTrack.style.transform = `translateX(-${moveAmount}px)`;
+            studentPrevBtn.style.display = studentCurrentIndex === 0 ? 'none' : 'block';
+            const wrapperWidth = studentTrack.parentElement.clientWidth;
+            const trackWidth = studentTrack.scrollWidth;
+            studentNextBtn.style.display = (moveAmount + wrapperWidth >= trackWidth - 1) ? 'none' : 'block';
+        };
 
         if (studentTrack && studentPrevBtn && studentNextBtn) {
-            let studentCards = [];
-            let studentCurrentIndex = 0;
-
-            const initialStudentTrack = () => {
-                studentCards = Array.from(studentTrack.children);
-                studentCurrentIndex = 0;
-                updateStudentCarousel();
-            };
-
-            const updateStudentCarousel = () => {
-                if (studentCards.length === 0) return;
-                const cardWidth = studentCards[0].offsetWidth;
-                const gap = parseInt(window.getComputedStyle(studentTrack).gap) || 20;
-                const moveAmount = studentCurrentIndex * (cardWidth + gap);
-                studentTrack.style.transform = `translateX(-${moveAmount}px)`;
-                studentPrevBtn.style.display = studentCurrentIndex === 0 ? 'none' : 'block';
-                const wrapperWidth = studentTrack.parentElement.clientWidth;
-                const trackWidth = studentTrack.scrollWidth;
-                studentNextBtn.style.display = (moveAmount + wrapperWidth >= trackWidth - 1) ? 'none' : 'block';
-            };
-
             studentNextBtn.addEventListener('click', () => {
                 if (studentCurrentIndex < studentCards.length - 1) {
                     studentCurrentIndex++;
@@ -439,11 +589,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            if (document.querySelector('#studentsContent.active')) {
-                setTimeout(initialStudentTrack, 100);
-            }
             window.addEventListener('resize', initialStudentTrack);
         }
+
+        loadPeople();
     }
 
 
