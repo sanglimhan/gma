@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let projectCurrentIndex = 0;
         let syncThumbs = () => {};
         let hasActiveWorksLoadingState = false;
-        let hasStartedProjectsLoad = false;
+        let projectsLoadPromise = null;
 
         const notifyWorksLoadingState = (isLoading) => {
             const eventName = isLoading ? 'works:initial-loading-start' : 'works:initial-loading-complete';
@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
             notifyWorksLoadingState(true);
         };
 
-        const hideWorksLoadingState = () => {
-            if (!hasActiveWorksLoadingState) return;
+        const hideWorksLoadingState = ({ force = false } = {}) => {
+            if (!hasActiveWorksLoadingState && !force) return;
             hasActiveWorksLoadingState = false;
             notifyWorksLoadingState(false);
         };
@@ -209,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (projects.length === 0) {
                     projectTrack.innerHTML = '<div class="basic-text text">No visible projects found.</div>';
                     thumbTrack.innerHTML = '';
-                    hideWorksLoadingState();
                     return;
                 }
 
@@ -219,26 +218,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const firstSlide = projectSlides[0];
                 const firstImage = firstSlide?.querySelector('.project-image');
                 await waitForImageReady(firstImage);
-                hideWorksLoadingState();
             } catch (error) {
                 console.error(error);
                 projectTrack.innerHTML = '<div class="basic-text text">Unable to load projects right now.</div>';
                 thumbTrack.innerHTML = '';
-                hideWorksLoadingState();
             }
         }
 
         const loadProjectsOnce = async () => {
             if (isWorksContentReady()) {
-                hideWorksLoadingState();
+                hideWorksLoadingState({ force: true });
                 return;
             }
 
-            if (hasStartedProjectsLoad) return;
-            hasStartedProjectsLoad = true;
+            if (projectsLoadPromise) return projectsLoadPromise;
+
             startWorksLoadingState();
-            await waitForNextPaint();
-            await loadProjects();
+            projectsLoadPromise = (async () => {
+                await waitForNextPaint();
+                await loadProjects();
+            })();
+
+            try {
+                await projectsLoadPromise;
+            } finally {
+                projectsLoadPromise = null;
+                hideWorksLoadingState({ force: true });
+            }
         };
 
         async function loadPublications() {
@@ -294,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const worksNavLinks = document.querySelectorAll('a[href="#works"]');
         worksNavLinks.forEach((link) => {
-            link.addEventListener('click', loadProjectsOnce, { once: true });
+            link.addEventListener('click', loadProjectsOnce);
         });
 
         window.addEventListener('hashchange', activateProjectsOnFirstWorksVisit);

@@ -204,9 +204,29 @@
           worksOverlay.classList.add('is-hidden');
         };
 
+        const isWorksReadyFromDom = () => {
+          const projectTrack = document.getElementById('projectTrack');
+          if (!projectTrack) return false;
+
+          const hasRenderedTrackChildren = projectTrack.children.length > 0;
+          const firstMainImage = projectTrack.querySelector('.project-slide .project-image');
+          const isFirstMainImageLoaded = Boolean(
+            firstMainImage
+            && firstMainImage.getAttribute('src')
+            && firstMainImage.complete
+            && firstMainImage.naturalWidth > 0
+          );
+
+          return hasRenderedTrackChildren || isFirstMainImageLoaded;
+        };
+
         const handleWorksNavIntent = (event) => {
           const link = event.target.closest('a[href="#works"]');
           if (!link) return;
+          if (isWorksReadyFromDom()) {
+            hideWorksOverlay();
+            return;
+          }
           showWorksOverlay();
         };
 
@@ -214,12 +234,20 @@
 
         window.addEventListener('hashchange', () => {
           if (window.location.hash === '#works') {
+            if (isWorksReadyFromDom()) {
+              hideWorksOverlay();
+              return;
+            }
             showWorksOverlay();
           }
         });
 
         if (window.location.hash === '#works') {
-          showWorksOverlay();
+          if (isWorksReadyFromDom()) {
+            hideWorksOverlay();
+          } else {
+            showWorksOverlay();
+          }
         }
 
         window.addEventListener('works:initial-loading-start', showWorksOverlay);
