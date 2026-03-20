@@ -584,10 +584,10 @@ section {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: rgba(var(--main-color-rgb), 0.6);
-  backdrop-filter: blur(5px);
-  overflow-x: auto;
-  white-space: nowrap;
+  background: transparent;
+  backdrop-filter: none;
+  overflow: visible;
+  white-space: normal;
 }
 
 #people .menu-content-container {
@@ -1056,6 +1056,46 @@ section {
     width: 100%;
     left: 0;
     position: relative;
+  }
+
+  #people .menu-tab {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 0.75rem;
+    align-items: end;
+    margin-bottom: 1rem;
+    border-bottom: none;
+    padding-bottom: 0.25rem;
+  }
+
+  #people .menu-tab-btn {
+    margin-right: 0;
+    padding: 0 0 8px 0;
+    width: 100%;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    text-align: left;
+  }
+
+  #people #studentsContent .carousel-container {
+    display: block;
+  }
+
+  #people #studentsContent .carousel-wrapper {
+    overflow: visible;
+  }
+
+  #people #studentTrack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transform: none !important;
+  }
+
+  #people .student-card {
+    width: 100%;
+    height: auto;
+    margin-top: 0;
   }
 
   .thumb-track {

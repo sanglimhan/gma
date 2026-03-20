@@ -498,7 +498,11 @@ const initializeSectionCarousels = () => {
             alumniList.innerHTML = alumni.map((item) => {
                 const name = item.name || '';
                 const degreeYear = [item.degree, item.year].filter(Boolean).join(', ');
-                const positionAtCompany = [item.current_position, item.company].filter(Boolean).join(' at ');
+                const position = String(item.current_position || '').trim();
+                const company = String(item.company || '').trim();
+                const positionAtCompany = position && company
+                    ? `${position} at ${company}`
+                    : (position || company);
                 const thesisTitle = item.thesis_title || '';
                 const thesisLink = item.thesis_link || '';
 
@@ -568,8 +572,16 @@ const initializeSectionCarousels = () => {
             updateStudentCarousel();
         };
 
+        const isMobilePeopleView = () => window.matchMedia('(max-width: 670px)').matches;
+
         const updateStudentCarousel = () => {
             if (!studentTrack || !studentPrevBtn || !studentNextBtn || studentCards.length === 0) return;
+            if (isMobilePeopleView()) {
+                studentTrack.style.transform = 'none';
+                studentPrevBtn.style.display = 'none';
+                studentNextBtn.style.display = 'none';
+                return;
+            }
             const cardWidth = studentCards[0].offsetWidth;
             const gap = parseInt(window.getComputedStyle(studentTrack).gap) || 20;
             const moveAmount = studentCurrentIndex * (cardWidth + gap);
