@@ -25,7 +25,7 @@
   }
 
   function drawNoise(time) {
-    if (!active) return;
+    if (!active || !context) return;
     if (time - lastNoise > (reducedMotion.matches ? 650 : 85)) {
       const image = context.createImageData(canvas.width, canvas.height);
       const pixels = new Uint32Array(image.data.buffer);
@@ -88,6 +88,10 @@
   reducedMotion.addEventListener?.("change", resizeNoise);
 
   resizeNoise();
-  frame = requestAnimationFrame(drawNoise);
+  if (context) {
+    frame = requestAnimationFrame(drawNoise);
+  } else {
+    canvas.hidden = true;
+  }
   setInterval(rotatePhrase, 4200);
 })();
