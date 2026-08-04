@@ -1,0 +1,187 @@
+:root {
+  --ink: #f7f5ee;
+  --secondary: #c9ccff;
+  --ground: #171a78;
+  --cyan: #35f2ff;
+  --magenta: #ff4fd8;
+  --violet: #8a63ff;
+  --lime: #d7ff3f;
+  --yellow: #fff06a;
+  --cursor-x: 50%;
+  --cursor-y: 50%;
+  --energy: .08;
+  --rgb-shift: 2px;
+  --scan-shift: 0px;
+  --scan-bend: 0deg;
+  --noise-opacity: .11;
+  --interference-opacity: .16;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--ink);
+  background: #2428e8;
+  font-family: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+}
+
+.signal {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgb(53 242 255 / 12%) 0, transparent 28%),
+    linear-gradient(128deg, #11145f 0, var(--ground) 53%, #0c0f4f 100%);
+  border: 1px solid rgb(53 242 255 / 35%);
+  box-shadow: inset 0 0 30px rgb(138 99 255 / 12%);
+}
+
+#noise,
+.interference,
+.scanlines,
+.vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#noise { z-index: 1; opacity: var(--noise-opacity); image-rendering: pixelated; }
+
+.interference {
+  z-index: 2;
+  opacity: var(--interference-opacity);
+  background:
+    linear-gradient(90deg, transparent 0 46%, rgb(53 242 255 / 22%) 49%, rgb(255 79 216 / 16%) 51%, transparent 54%),
+    repeating-linear-gradient(90deg, transparent 0 12%, rgb(138 99 255 / 8%) 12.3%, transparent 12.8% 29%);
+  background-position: var(--cursor-x) 0;
+  mix-blend-mode: screen;
+  mask-image: radial-gradient(circle 26vmin at var(--cursor-x) var(--cursor-y), #000, transparent 72%);
+}
+
+.transmission {
+  position: relative;
+  z-index: 3;
+  width: min(88vw, 1120px);
+  text-align: left;
+}
+
+.university,
+.initials {
+  position: relative;
+  width: max-content;
+  margin: 0;
+  color: var(--secondary);
+  text-transform: uppercase;
+}
+
+.university {
+  margin-left: 7%;
+  font-size: clamp(.65rem, 1.2vw, .9rem);
+  font-weight: 600;
+  letter-spacing: .17em;
+}
+
+.initials {
+  margin: clamp(.65rem, 1.5vh, 1rem) 0 clamp(1.3rem, 3.5vh, 2.8rem) 20%;
+  color: var(--lime);
+  font-size: clamp(.9rem, 2vw, 1.45rem);
+  font-weight: 800;
+  letter-spacing: .48em;
+}
+
+.title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(3.25rem, 10.2vw, 9.7rem);
+  font-stretch: condensed;
+  font-weight: 900;
+  letter-spacing: -.075em;
+  line-height: .72;
+  text-transform: uppercase;
+  filter: contrast(1.12);
+}
+
+.title span { display: block; width: max-content; white-space: nowrap; }
+.title span:nth-child(1) { margin-left: 2%; }
+.title span:nth-child(2) { margin-left: 13%; }
+.title span:nth-child(3) { margin-left: 5%; }
+
+.signal-line {
+  --line-x: 0px;
+  --line-y: 0px;
+  --line-scale: 1;
+  --line-skew: 0deg;
+  position: relative;
+  transform: translate(var(--line-x), var(--line-y)) scaleX(var(--line-scale)) skewX(var(--line-skew));
+  transform-origin: var(--cursor-x) 50%;
+  will-change: transform;
+}
+
+.signal-line::before,
+.signal-line::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  content: attr(data-text);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.signal-line::before {
+  color: var(--cyan);
+  transform: translate(calc(0px - var(--rgb-shift)), var(--line-y));
+  clip-path: inset(4% 0 44% 0);
+  opacity: .7;
+}
+
+.signal-line::after {
+  color: var(--magenta);
+  transform: translate(var(--rgb-shift), calc(0px - var(--line-y)));
+  clip-path: inset(49% 0 5% 0);
+  opacity: .66;
+}
+
+.scanlines {
+  z-index: 5;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(12 15 79 / 29%) 3px 4px);
+  transform: perspective(400px) rotateX(var(--scan-bend)) translateX(var(--scan-shift));
+  mix-blend-mode: multiply;
+}
+
+.vignette { z-index: 6; box-shadow: inset 0 0 15vmin rgb(12 15 79 / 58%); }
+
+.signal.flash .interference {
+  filter: hue-rotate(42deg) brightness(1.8);
+}
+
+@media (max-width: 600px) {
+  .transmission { width: 92vw; }
+  .title { font-size: clamp(2.75rem, 14vw, 5.2rem); line-height: .82; }
+  .title span:nth-child(2) { margin-left: 7%; }
+  .title span:nth-child(3) { margin-left: 1%; }
+  .initials { margin-left: 9%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-line { transform: none; }
+  .signal-line::before { transform: translateX(-1px); }
+  .signal-line::after { transform: translateX(1px); }
+  .interference { opacity: .08; }
+  #noise { opacity: .06; }
+}
