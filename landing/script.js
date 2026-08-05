@@ -3,95 +3,122 @@
 
   const root = document.documentElement;
   const stage = document.querySelector(".signal");
-  const phrase = document.querySelector("#phrase");
   const canvas = document.querySelector("#noise");
   const context = canvas.getContext("2d", { alpha: true });
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  const phrases = ["CAU GMA", "GENERATIVE SYSTEMS", "SYNTHETIC SIGNALS", "MEDIA AS PROCESS"];
 
   let active = !document.hidden;
   let pointerX = innerWidth / 2;
   let pointerY = innerHeight / 2;
-  let proximity = 0;
-  let phraseIndex = 0;
-  let frame = 0;
+  let previousX = pointerX;
+  let previousY = pointerY;
+  let previousTime = performance.now();
+  let targetIntensity = 0;
+  let intensity = 0;
   let lastNoise = 0;
-  let burstTimer;
+  let lastTear = 0;
+  let nextIdleJolt = performance.now() + 1800;
+  let frame = 0;
+  let flashTimer = 0;
 
   function resizeNoise() {
-    const scale = reducedMotion.matches ? 0.12 : 0.2;
-    canvas.width = Math.max(80, Math.floor(innerWidth * scale));
-    canvas.height = Math.max(60, Math.floor(innerHeight * scale));
+    const scale = reducedMotion.matches ? 0.1 : 0.2;
+    canvas.width = Math.max(72, Math.floor(innerWidth * scale));
+    canvas.height = Math.max(54, Math.floor(innerHeight * scale));
+  }
+
+  function setPointer(event) {
+    const point = event.touches?.[0] || event;
+    if (point.clientX == null) return;
+
+    const now = performance.now();
+    const elapsed = Math.max(12, now - previousTime);
+    const distance = Math.hypot(point.clientX - previousX, point.clientY - previousY);
+    const speed = distance / elapsed;
+
+    pointerX = point.clientX;
+    pointerY = point.clientY;
+    previousX = pointerX;
+    previousY = pointerY;
+    previousTime = now;
+    targetIntensity = Math.min(1, 0.2 + speed * 0.48);
+
+    if (speed > 1.15 && !reducedMotion.matches) triggerFlash();
+  }
+
+  function triggerFlash() {
+    if (performance.now() - flashTimer < 170) return;
+    flashTimer = performance.now();
+    stage.classList.remove("flash");
+    void stage.offsetWidth;
+    stage.classList.add("flash");
   }
 
   function drawNoise(time) {
-    if (!active || !context) return;
-    if (time - lastNoise > (reducedMotion.matches ? 650 : 85)) {
-      const image = context.createImageData(canvas.width, canvas.height);
-      const pixels = new Uint32Array(image.data.buffer);
-      for (let i = 0; i < pixels.length; i += 1) {
-        const value = Math.random() > 0.5 ? 255 : 0;
-        const alpha = 50 + Math.floor(Math.random() * 55);
-        pixels[i] = (alpha << 24) | (value << 16) | (value << 8) | value;
-      }
-      context.putImageData(image, 0, 0);
-      lastNoise = time;
+    if (!context || time - lastNoise < (reducedMotion.matches ? 700 : 48 - intensity * 24)) return;
+
+    const image = context.createImageData(canvas.width, canvas.height);
+    const pixels = new Uint32Array(image.data.buffer);
+    const pointerCanvasX = (pointerX / innerWidth) * canvas.width;
+    const pointerCanvasY = (pointerY / innerHeight) * canvas.height;
+    const radius = Math.max(canvas.width, canvas.height) * 0.23;
+
+    for (let i = 0; i < pixels.length; i += 1) {
+      const x = i % canvas.width;
+      const y = Math.floor(i / canvas.width);
+      const local = Math.max(0, 1 - Math.hypot(x - pointerCanvasX, y - pointerCanvasY) / radius);
+      const bright = Math.random() > 0.56 ? 255 : 75;
+      const alpha = Math.floor(13 + Math.random() * (20 + local * intensity * 105));
+      const cyanBias = local * intensity > Math.random() ? 35 : 0;
+      pixels[i] = (alpha << 24) | (bright << 16) | (Math.min(255, bright + cyanBias) << 8) | Math.min(255, bright + cyanBias);
     }
-    frame = requestAnimationFrame(drawNoise);
+
+    context.putImageData(image, 0, 0);
+    lastNoise = time;
   }
 
-  function updatePointer(x, y) {
-    pointerX = x;
-    pointerY = y;
-    const xRatio = pointerX / innerWidth - 0.5;
-    const yRatio = pointerY / innerHeight - 0.5;
-    const distance = Math.hypot(xRatio, yRatio) / 0.707;
-    proximity = Math.max(0, 1 - distance);
-
-    if (!reducedMotion.matches) {
-      root.style.setProperty("--shift-x", `${(xRatio * 5).toFixed(2)}px`);
-      root.style.setProperty("--shift-y", `${(yRatio * 3).toFixed(2)}px`);
-      root.style.setProperty("--proximity", proximity.toFixed(3));
-    }
-  }
-
-  function glitchBurst() {
-    if (reducedMotion.matches) return;
-    clearTimeout(burstTimer);
-    stage.classList.remove("burst");
-    void stage.offsetWidth;
-    stage.classList.add("burst");
-    burstTimer = setTimeout(() => stage.classList.remove("burst"), 380);
-  }
-
-  function rotatePhrase() {
+  function animate(time) {
     if (!active) return;
-    phrase.classList.add("out");
-    setTimeout(() => {
-      phraseIndex = (phraseIndex + 1) % phrases.length;
-      phrase.textContent = phrases[phraseIndex];
-      phrase.classList.remove("out");
-    }, reducedMotion.matches ? 0 : 140);
+
+    intensity += (targetIntensity - intensity) * 0.18;
+    targetIntensity *= 0.92;
+    if (targetIntensity < 0.012) targetIntensity = 0;
+
+    root.style.setProperty("--pointer-x", `${pointerX.toFixed(1)}px`);
+    root.style.setProperty("--pointer-y", `${pointerY.toFixed(1)}px`);
+    root.style.setProperty("--intensity", reducedMotion.matches ? "0" : intensity.toFixed(3));
+
+    if (!reducedMotion.matches && time - lastTear > 42) {
+      const force = intensity * intensity;
+      root.style.setProperty("--tear-a", `${((Math.random() - 0.5) * 42 * force).toFixed(1)}px`);
+      root.style.setProperty("--tear-b", `${((Math.random() - 0.5) * 20 * force).toFixed(1)}px`);
+      lastTear = time;
+    }
+
+    if (!reducedMotion.matches && time > nextIdleJolt && intensity < 0.08) {
+      root.style.setProperty("--idle-jolt", `${Math.random() > 0.5 ? 1.5 : -1.5}px`);
+      setTimeout(() => root.style.setProperty("--idle-jolt", "0px"), 70);
+      nextIdleJolt = time + 1400 + Math.random() * 3200;
+    }
+
+    drawNoise(time);
+    frame = requestAnimationFrame(animate);
   }
 
-  addEventListener("pointermove", (event) => updatePointer(event.clientX, event.clientY), { passive: true });
-  addEventListener("pointerdown", (event) => {
-    updatePointer(event.clientX, event.clientY);
-    glitchBurst();
-  }, { passive: true });
+  addEventListener("pointermove", setPointer, { passive: true });
+  addEventListener("touchmove", setPointer, { passive: true });
   addEventListener("resize", resizeNoise, { passive: true });
   document.addEventListener("visibilitychange", () => {
     active = !document.hidden;
     cancelAnimationFrame(frame);
-    if (active) frame = requestAnimationFrame(drawNoise);
+    if (active) frame = requestAnimationFrame(animate);
   });
   reducedMotion.addEventListener?.("change", resizeNoise);
 
   resizeNoise();
   if (context) {
-    frame = requestAnimationFrame(drawNoise);
+    frame = requestAnimationFrame(animate);
   } else {
     canvas.hidden = true;
   }
-  setInterval(rotatePhrase, 4200);
 })();
