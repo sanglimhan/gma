@@ -1,124 +1,79 @@
 (() => {
   "use strict";
-
-  const root = document.documentElement;
   const stage = document.querySelector(".signal");
   const canvas = document.querySelector("#noise");
-  const context = canvas.getContext("2d", { alpha: true });
-  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-
-  let active = !document.hidden;
-  let pointerX = innerWidth / 2;
-  let pointerY = innerHeight / 2;
-  let previousX = pointerX;
-  let previousY = pointerY;
-  let previousTime = performance.now();
-  let targetIntensity = 0;
-  let intensity = 0;
-  let lastNoise = 0;
-  let lastTear = 0;
-  let nextIdleJolt = performance.now() + 1800;
-  let frame = 0;
-  let flashTimer = 0;
-
-  function resizeNoise() {
-    const scale = reducedMotion.matches ? 0.1 : 0.2;
-    canvas.width = Math.max(72, Math.floor(innerWidth * scale));
-    canvas.height = Math.max(54, Math.floor(innerHeight * scale));
+  const ctx = canvas.getContext("2d");
+  const button = document.querySelector(".remix");
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  let x = 0, y = 0, tx = 0, ty = 0, energy = 0;
+  let frame = 0, last = 0, lastNoise = 0, image;
+  function resize() {
+    canvas.width = Math.min(240, Math.max(64, Math.round(stage.clientWidth / 8)));
+    canvas.height = Math.min(160, Math.max(48, Math.round(stage.clientHeight / 8)));
+    if (ctx) image = ctx.createImageData(canvas.width, canvas.height);
+    drawNoise();
   }
-
-  function setPointer(event) {
+  function drawNoise() {
+    if (!ctx || !image) return;
+    for (let i = 0; i < image.data.length; i += 4) {
+      const value = Math.random() * 255;
+      image.data[i] = image.data[i + 1] = image.data[i + 2] = value;
+      image.data[i + 3] = 100;
+    }
+    ctx.putImageData(image, 0, 0);
+  }
+  function pointer(event) {
+    if (motion.matches) return;
     const point = event.touches?.[0] || event;
     if (point.clientX == null) return;
-
-    const now = performance.now();
-    const elapsed = Math.max(12, now - previousTime);
-    const distance = Math.hypot(point.clientX - previousX, point.clientY - previousY);
-    const speed = distance / elapsed;
-
-    pointerX = point.clientX;
-    pointerY = point.clientY;
-    previousX = pointerX;
-    previousY = pointerY;
-    previousTime = now;
-    targetIntensity = Math.min(1, 0.2 + speed * 0.48);
-
-    if (speed > 1.15 && !reducedMotion.matches) triggerFlash();
+    const bounds = stage.getBoundingClientRect();
+    tx = Math.max(-1, Math.min(1, (point.clientX - bounds.left) / bounds.width * 2 - 1));
+    ty = Math.max(-1, Math.min(1, (point.clientY - bounds.top) / bounds.height * 2 - 1));
+    energy = 1;
   }
-
-  function triggerFlash() {
-    if (performance.now() - flashTimer < 170) return;
-    flashTimer = performance.now();
-    stage.classList.remove("flash");
-    void stage.offsetWidth;
-    stage.classList.add("flash");
-  }
-
-  function drawNoise(time) {
-    if (!context || time - lastNoise < (reducedMotion.matches ? 700 : 48 - intensity * 24)) return;
-
-    const image = context.createImageData(canvas.width, canvas.height);
-    const pixels = new Uint32Array(image.data.buffer);
-    const pointerCanvasX = (pointerX / innerWidth) * canvas.width;
-    const pointerCanvasY = (pointerY / innerHeight) * canvas.height;
-    const radius = Math.max(canvas.width, canvas.height) * 0.23;
-
-    for (let i = 0; i < pixels.length; i += 1) {
-      const x = i % canvas.width;
-      const y = Math.floor(i / canvas.width);
-      const local = Math.max(0, 1 - Math.hypot(x - pointerCanvasX, y - pointerCanvasY) / radius);
-      const bright = Math.random() > 0.56 ? 255 : 75;
-      const alpha = Math.floor(13 + Math.random() * (20 + local * intensity * 105));
-      const cyanBias = local * intensity > Math.random() ? 35 : 0;
-      pixels[i] = (alpha << 24) | (bright << 16) | (Math.min(255, bright + cyanBias) << 8) | Math.min(255, bright + cyanBias);
-    }
-
-    context.putImageData(image, 0, 0);
-    lastNoise = time;
-  }
-
   function animate(time) {
-    if (!active) return;
-
-    intensity += (targetIntensity - intensity) * 0.18;
-    targetIntensity *= 0.92;
-    if (targetIntensity < 0.012) targetIntensity = 0;
-
-    root.style.setProperty("--pointer-x", `${pointerX.toFixed(1)}px`);
-    root.style.setProperty("--pointer-y", `${pointerY.toFixed(1)}px`);
-    root.style.setProperty("--intensity", reducedMotion.matches ? "0" : intensity.toFixed(3));
-
-    if (!reducedMotion.matches && time - lastTear > 42) {
-      const force = intensity * intensity;
-      root.style.setProperty("--tear-a", `${((Math.random() - 0.5) * 42 * force).toFixed(1)}px`);
-      root.style.setProperty("--tear-b", `${((Math.random() - 0.5) * 20 * force).toFixed(1)}px`);
-      lastTear = time;
-    }
-
-    if (!reducedMotion.matches && time > nextIdleJolt && intensity < 0.08) {
-      root.style.setProperty("--idle-jolt", `${Math.random() > 0.5 ? 1.5 : -1.5}px`);
-      setTimeout(() => root.style.setProperty("--idle-jolt", "0px"), 70);
-      nextIdleJolt = time + 1400 + Math.random() * 3200;
-    }
-
-    drawNoise(time);
+    frame = 0;
+    if (document.hidden || motion.matches) return;
+    const ease = 1 - Math.exp(-Math.min(64, time - (last || time - 16)) / 100);
+    last = time;
+    x += (tx - x) * ease; y += (ty - y) * ease;
+    energy *= 1 - ease * .4;
+    stage.style.setProperty("--px", x.toFixed(3));
+    stage.style.setProperty("--py", y.toFixed(3));
+    stage.style.setProperty("--energy", energy.toFixed(3));
+    if (time - lastNoise > 100) { drawNoise(); lastNoise = time; }
     frame = requestAnimationFrame(animate);
   }
-
-  addEventListener("pointermove", setPointer, { passive: true });
-  addEventListener("touchmove", setPointer, { passive: true });
-  addEventListener("resize", resizeNoise, { passive: true });
-  document.addEventListener("visibilitychange", () => {
-    active = !document.hidden;
-    cancelAnimationFrame(frame);
-    if (active) frame = requestAnimationFrame(animate);
-  });
-  reducedMotion.addEventListener?.("change", resizeNoise);
-
-  resizeNoise();
-  if (context) {
-    frame = requestAnimationFrame(animate);
+  function syncMotion() {
+    cancelAnimationFrame(frame); frame = 0; last = 0;
+    if (motion.matches) {
+      x = y = tx = ty = energy = 0;
+      ["--px", "--py", "--energy"].forEach(name => stage.style.setProperty(name, "0"));
+      drawNoise();
+    } else if (!document.hidden) frame = requestAnimationFrame(animate);
+  }
+  // Pointer Events already include touch. Touch listeners are legacy fallback only.
+  if ("PointerEvent" in window) {
+    stage.addEventListener("pointermove", pointer, { passive: true });
+    stage.addEventListener("pointerdown", pointer, { passive: true });
+    stage.addEventListener("pointerleave", () => { tx = ty = 0; });
+    stage.addEventListener("pointerup", event => { if (event.pointerType !== "mouse") tx = ty = 0; });
+    stage.addEventListener("pointercancel", () => { tx = ty = 0; });
   } else {
-    canvas.hidden = true;
+    stage.addEventListener("mousemove", pointer, { passive: true });
+    stage.addEventListener("touchstart", pointer, { passive: true });
+    stage.addEventListener("touchmove", pointer, { passive: true });
+    stage.addEventListener("touchend", () => { tx = ty = 0; }, { passive: true });
+    stage.addEventListener("touchcancel", () => { tx = ty = 0; }, { passive: true });
+    stage.addEventListener("mouseleave", () => { tx = ty = 0; });
   }
+  button.addEventListener("click", () => {
+    const remixed = stage.classList.toggle("remixed");
+    button.setAttribute("aria-pressed", String(remixed));
+  });
+  addEventListener("resize", resize, { passive: true });
+  document.addEventListener("visibilitychange", syncMotion);
+  if (motion.addEventListener) motion.addEventListener("change", syncMotion);
+  else motion.addListener(syncMotion);
+  resize(); syncMotion();
 })();
