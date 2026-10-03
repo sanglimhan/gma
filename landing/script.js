@@ -59,28 +59,97 @@
     measure();
   }
 
-  function measure() {
-    const speed = Math.max(28, Math.min(48, innerWidth * .04));
-    rows.forEach((row, index) => {
-      const duration = row.querySelector(".copy").getBoundingClientRect().width / speed;
-      row.style.setProperty("--duration", duration + "s");
-      row.style.setProperty("--delay", (-duration * ((index * .173) % 1)) + "s");
-    });
-    poster.classList.add("ready");
+  // Distinct spatial phases, independent of each row's travel direction.
+  const phases = rows.map((_, index) => index / rows.length);
+  for (let i = phases.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [phases[i], phases[j]] = [phases[j], phases[i]];
   }
+  const states = rows.map((row, index) => ({
+    row, track: row.querySelector(".track"), phase: phases[index],
+    width: 0, direction: index % 2 ? 1 : -1,
+    velocity: (index % 2 ? 1 : -1) * baseSpeed(),
+    hovered: false, boostUntil: 0, tapTimer: 0
+  }));
+  let frame = 0;
+  let lastTime = 0;
+  function baseSpeed() { return Math.max(28, Math.min(48, innerWidth * .04)); }
+  function draw(state) {
+    state.track.style.transform = motion.matches ? "none"
+      : "translate3d(" + (-state.phase * state.width) + "px,0,0)";
+  }
+  function measure() {
+    states.forEach(state => {
+      const copies = [...state.track.querySelectorAll(".copy")];
+      copies.slice(2).forEach(copy => copy.remove());
+      state.width = copies[0].getBoundingClientRect().width;
+      // Cover even extremely wide, short viewports throughout a full loop.
+      if (state.width > 0 && !motion.matches) {
+        const count = Math.max(2, Math.ceil(state.row.clientWidth / state.width) + 1);
+        for (let i = 2; i < count; i++) state.track.appendChild(copies[1].cloneNode(true));
+      }
+      draw(state);
+    });
+  }
+  function tick(now) {
+    const dt = lastTime ? Math.min((now - lastTime) / 1000, .05) : 0;
+    lastTime = now;
+    states.forEach(state => {
+      const boost = 1 + 1.2 * Math.max(0, Math.min(1, (state.boostUntil - now) / 1100));
+      const target = state.direction * baseSpeed() * (state.hovered ? .22 : 1) * boost;
+      state.velocity += (target - state.velocity) * (1 - Math.exp(-dt / .18));
+      if (state.width > 0) {
+        state.phase = ((state.phase - state.velocity * dt / state.width) % 1 + 1) % 1;
+        draw(state);
+      }
+    });
+    frame = requestAnimationFrame(tick);
+  }
+  states.forEach(state => {
+    state.row.addEventListener("pointerenter", event => {
+      if (event.pointerType === "touch") return;
+      state.hovered = true;
+      state.row.classList.add("is-hovered");
+    });
+    const leave = () => {
+      state.hovered = false;
+      state.row.classList.remove("is-hovered");
+    };
+    state.row.addEventListener("pointerleave", leave);
+    state.row.addEventListener("pointercancel", leave);
+    state.row.addEventListener("click", () => {
+      state.direction *= -1;
+      state.boostUntil = performance.now() + 1100;
+      state.row.classList.add("is-tapped");
+      clearTimeout(state.tapTimer);
+      state.tapTimer = setTimeout(() => state.row.classList.remove("is-tapped"), 650);
+    });
+  });
   function sync() {
+    cancelAnimationFrame(frame);
+    lastTime = 0;
     poster.classList.toggle("paused", document.hidden);
-    rows.forEach((row, index) => row.setAttribute("aria-label",
-      "Lab identity, row " + (index + 1) + (motion.matches
-        ? ". Scroll horizontally to read."
-        : ". Tab to pause.")));
-    measure();
+    states.forEach((state, index) => {
+      if (document.hidden) {
+        state.hovered = false;
+        state.row.classList.remove("is-hovered");
+      }
+      state.row.setAttribute("aria-label", "Lab identity, row " + (index + 1) +
+        (motion.matches ? ". Scroll horizontally to read." : ""));
+      draw(state);
+    });
+    if (!document.hidden && !motion.matches) frame = requestAnimationFrame(tick);
   }
   addEventListener("resize", measure, { passive: true });
   document.addEventListener("visibilitychange", sync);
-  if (motion.addEventListener) motion.addEventListener("change", sync);
-  else motion.addListener(sync);
-  if (document.fonts) document.fonts.ready.then(sizeCharacters);
+  const motionChanged = () => { measure(); sync(); };
+  if (motion.addEventListener) motion.addEventListener("change", motionChanged);
+  else motion.addListener(motionChanged);
   sizeCharacters();
   sync();
+  if (document.fonts) {
+    Promise.all(Array.from({ length: 7 }, (_, i) =>
+      document.fonts.load((i + 1) * 100 + ' 100px "IBM Plex Sans"')))
+      .then(sizeCharacters).catch(() => document.fonts.ready.then(sizeCharacters));
+  }
 })();
