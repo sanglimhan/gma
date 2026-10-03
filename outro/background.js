@@ -79,7 +79,7 @@ function setupLights() {
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
     
-    const lightColors = [0xff69b4, 0x00ff7f, 0x3399ff, 0xffa500];
+    const lightColors = [0xff69b4, 0xffb6d5, 0xc8b6ff, 0xfff0e8];
     lightColors.forEach((color, i) => {
         const directionalLight = new THREE.DirectionalLight(color, 0.4);
         const angle = baseLightAngles[i];
