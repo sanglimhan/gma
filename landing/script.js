@@ -6,29 +6,23 @@
 
   rows.forEach(row => {
     const copy = row.querySelector(".copy");
-    const phrase = copy.textContent;
+    const phrase = copy.textContent.replace(/[\s\u00a0]+/g, " ").trim();
     const fragment = document.createDocumentFragment();
-    const characters = [...phrase];
-    let spacingPair;
-    for (const [index, character] of characters.entries()) {
-      if (index % 2 === 0) {
-        spacingPair = {
-          shift: index + 1 < characters.length ? .035 + Math.random() * .055 : 0,
-          duration: (3 + Math.random() * 5).toFixed(2) + "s",
-          delay: (-Math.random() * 16).toFixed(2) + "s"
-        };
-      }
+    for (const character of phrase) {
       const glyph = document.createElement("span");
-      glyph.className = "glyph";
+      const isSpace = character === " ";
+      glyph.className = isSpace ? "glyph space" : "glyph";
       glyph.textContent = character;
-      // Adjacent gaps expand/contract in opposite phases, keeping the loop width constant.
-      glyph.style.setProperty("--spacing-shift", String(spacingPair.shift * (index % 2 ? -1 : 1)) + "em");
-      glyph.style.setProperty("--spacing-duration", spacingPair.duration);
-      glyph.style.setProperty("--spacing-delay", spacingPair.delay);
-      glyph.style.setProperty("--weight", String(100 + Math.floor(Math.random() * 601)));
-      glyph.style.setProperty("--spacing", ((Math.random() * .24) - .10).toFixed(3) + "em");
-      glyph.style.setProperty("--weight-duration", (2.5 + Math.random() * 5).toFixed(2) + "s");
-      glyph.style.setProperty("--weight-delay", (-Math.random() * 15).toFixed(2) + "s");
+      if (!isSpace) {
+        // Move every character symmetrically without changing the measured loop width.
+        glyph.style.setProperty("--sway", (.18 + Math.random() * .20).toFixed(3) + "em");
+        glyph.style.setProperty("--sway-duration", (1.1 + Math.random() * 1.7).toFixed(2) + "s");
+        glyph.style.setProperty("--sway-delay", (-Math.random() * 8).toFixed(2) + "s");
+        glyph.style.setProperty("--weight", String(100 + Math.floor(Math.random() * 601)));
+        glyph.style.setProperty("--spacing", (-.03 + Math.random() * .07).toFixed(3) + "em");
+        glyph.style.setProperty("--weight-duration", (2.5 + Math.random() * 5).toFixed(2) + "s");
+        glyph.style.setProperty("--weight-delay", (-Math.random() * 15).toFixed(2) + "s");
+      }
       fragment.appendChild(glyph);
     }
     copy.replaceChildren(fragment);
@@ -42,7 +36,7 @@
   });
 
   function measure() {
-    const speed = Math.max(55, Math.min(110, innerWidth * .09));
+    const speed = Math.max(12, Math.min(24, innerWidth * .02));
     rows.forEach((row, index) => {
       const duration = row.querySelector(".copy").getBoundingClientRect().width / speed;
       row.style.setProperty("--duration", duration + "s");
