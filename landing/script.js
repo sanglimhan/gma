@@ -69,7 +69,7 @@
     row, track: row.querySelector(".track"), phase: phases[index],
     width: 0, direction: index % 2 ? 1 : -1,
     velocity: (index % 2 ? 1 : -1) * baseSpeed(),
-    hovered: false, boostUntil: 0, tapTimer: 0
+    hovered: false, sweep: null, tapTimer: 0
   }));
   let frame = 0;
   let lastTime = 0;
@@ -95,13 +95,26 @@
     const dt = lastTime ? Math.min((now - lastTime) / 1000, .05) : 0;
     lastTime = now;
     states.forEach(state => {
-      const boost = 1 + 1.2 * Math.max(0, Math.min(1, (state.boostUntil - now) / 1100));
-      // Let the click impulse remain visible even while the pointer stays on the row.
-      const hoverFactor = state.hovered && now >= state.boostUntil ? .22 : 1;
-      const target = state.direction * baseSpeed() * hoverFactor * boost;
-      state.velocity += (target - state.velocity) * (1 - Math.exp(-dt / .18));
+      let distance;
+      if (state.sweep) {
+        const sweep = state.sweep;
+        const progress = Math.min(1, (now - sweep.started) / 900);
+        // Quintic easing has zero speed and acceleration at both ends.
+        const eased = progress * progress * progress * (progress * (progress * 6 - 15) + 10);
+        distance = sweep.distance * (eased - sweep.previous);
+        sweep.previous = eased;
+        state.velocity = 0;
+        if (progress === 1) {
+          state.sweep = null;
+          state.row.classList.remove("is-tapped");
+        }
+      } else {
+        const target = state.direction * baseSpeed() * (state.hovered ? .22 : 1);
+        state.velocity += (target - state.velocity) * (1 - Math.exp(-dt / .18));
+        distance = state.velocity * dt;
+      }
       if (state.width > 0) {
-        state.phase = ((state.phase - state.velocity * dt / state.width) % 1 + 1) % 1;
+        state.phase = ((state.phase - distance / state.width) % 1 + 1) % 1;
         draw(state);
       }
     });
@@ -121,10 +134,17 @@
     state.row.addEventListener("pointercancel", leave);
     state.row.addEventListener("click", () => {
       state.direction *= -1;
-      state.boostUntil = performance.now() + 1100;
-      state.row.classList.add("is-tapped");
       clearTimeout(state.tapTimer);
-      state.tapTimer = setTimeout(() => state.row.classList.remove("is-tapped"), 650);
+      state.row.classList.add("is-tapped");
+      // A second click starts a new sweep from the current rendered position.
+      state.sweep = motion.matches ? null : {
+        started: performance.now(),
+        distance: state.direction * state.row.clientWidth,
+        previous: 0
+      };
+      if (motion.matches) {
+        state.tapTimer = setTimeout(() => state.row.classList.remove("is-tapped"), 650);
+      }
     });
   });
   function sync() {
@@ -132,6 +152,12 @@
     lastTime = 0;
     poster.classList.toggle("paused", document.hidden);
     states.forEach((state, index) => {
+      if (document.hidden || motion.matches) {
+        state.sweep = null;
+        state.velocity = 0;
+        clearTimeout(state.tapTimer);
+        state.row.classList.remove("is-tapped");
+      }
       if (document.hidden) {
         state.hovered = false;
         state.row.classList.remove("is-hovered");
