@@ -50,7 +50,7 @@ body { background: var(--ground); color: var(--ink); }
   font-weight: var(--weight, 400);
   animation: weight-shift var(--weight-duration, 4s) steps(1, end)
     var(--weight-delay, 0s) infinite,
-    character-sway var(--sway-duration, 2s) ease-in-out
+    character-sway var(--sway-duration, 1s) cubic-bezier(.65, 0, .35, 1)
     var(--sway-delay, 0s) infinite alternate;
 }
 .glyph.space {
