@@ -12,8 +12,11 @@
       const glyph = document.createElement("span");
       glyph.className = "glyph";
       glyph.textContent = character;
-      // Choose once per character; retain weights while moving and resizing.
+      // Fixed spacing and advance keep the loop stable while variable weight animates.
       glyph.style.setProperty("--weight", String(100 + Math.floor(Math.random() * 601)));
+      glyph.style.setProperty("--spacing", ((Math.random() * .24) - .10).toFixed(3) + "em");
+      glyph.style.setProperty("--weight-duration", (2.5 + Math.random() * 5).toFixed(2) + "s");
+      glyph.style.setProperty("--weight-delay", (-Math.random() * 15).toFixed(2) + "s");
       fragment.appendChild(glyph);
     }
     copy.replaceChildren(fragment);
@@ -31,7 +34,7 @@
     rows.forEach((row, index) => {
       const duration = row.querySelector(".copy").getBoundingClientRect().width / speed;
       row.style.setProperty("--duration", duration + "s");
-      row.style.setProperty("--delay", (-duration * [0, .28, .57][index]) + "s");
+      row.style.setProperty("--delay", (-duration * ((index * .173) % 1)) + "s");
     });
     poster.classList.add("ready");
   }
