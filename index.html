@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Generative Media Art Lab + Studio</title>
   <link rel="stylesheet" href="CSS/mainstyle.css">
-  <link rel="stylesheet" href="CSS/works.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -32,30 +31,20 @@
 
   <nav id="mobileMenu" class="mobile-nav">
     <a href="#intro">Intro</a>
-    <a href="#about GMA">about GMA</a>
-    <a href="#works">Works</a>
-    <a href="#people">People</a>
-    <a href="#updates">Updates</a>
+    <a href="./landing/">Landing</a>
     <button id="mobileMenuClose" class="mobile-nav-close" type="button" aria-label="Close Menu">✕</button>
   </nav>
 
   <nav class="nav-bottom">
     <div class="nav-bottom-inner">
       <a href="#intro"><span>Intro</span></a>
-      <a href="#about GMA"><span>about GMA</span></a>
-      <a href="#works"><span>Works</span></a>
-      <a href="#people"><span>People</span></a>
-      <a href="#updates"><span>Updates</span></a>
+      <a href="./landing/"><span>Landing</span></a>
     </div>
   </nav>
   <footer class="footer-bar">
     &copy; 2025 Generative Media Art Lab + Studio — Chung-Ang University
   </footer>
 
-  <div id="worksGlobalLoadingOverlay" class="works-global-loading-overlay is-hidden" aria-live="polite" aria-label="Loading works">
-    <div class="works-global-loading-spinner" aria-hidden="true"></div>
-    <span class="basic-text text">Loading works...</span>
-  </div>
   <div class="section-container">
     <section id="intro" class="fade-in-section section-box">
       <div class="intro-section">
@@ -100,207 +89,10 @@
         </div>
       </div>
     </section>
-    <section id="about GMA" class="fade-in-section section-box">
-      <div class="section-bg">
-        <div class="basic-text title">About GMA</div>
-        <div class="basic-text text">We create generative media art that transforms data into sensory experiences, using
-          technology to expand aesthetic expression. Our practice critically examines contemporary techno-culture and
-          questions the cultural impacts of technology. We also develop a theoretical framework connecting art,
-          philosophy, and engineering through integrated research.</div><br>
-
-        <div class="basic-text title">Connect with us</div>
-        <div class="basic-text text">
-          Want to learn more? Drop us a line! You can reach us at <a
-            href="mailto:sanglimhan@cau.ac.kr">sanglimhan@cau.ac.kr</a><br>
-          If you're a <span class="bold">prospective graduate student,</span> please include a brief introduction and
-          your portfolio (if you have one) in your message. We'll be in touch to set up an interview.
-        </div><br>
-
-        <div class="basic-text title">Affiliation</div>
-        <div class="basic-text text">
-          <span class="korean">21 인공지능 - 콘텐츠 미래산업 교육연구단: </span><a href="https://bk21four.cau.ac.kr/gsaim/"
-            target="_blank">bk21four.cau.ac.kr/gsaim/</a>
-        </div>
-        <div class="basic-text text">
-          <span class="korean">첨단영상대학원: </span><a href="https://gsaim.cau.ac.kr/main.php"
-            target="_blank">gsaim.cau.ac.kr/</a>
-        </div>
-        <div class="basic-text text">
-          <span class="korean">메타버스융합대학원: </span><a href="https://meta.cau.ac.kr/" target="_blank">meta.cau.ac.kr/</a>
-        </div>
-      </div>
-    </section>
-    <div id="worksMount"></div>
-    <div id="peopleMount"></div>
-
-
-      <section id="updates" class="fade-in-section section-box">
-        <div class="section-bg">
-          <div class="basic-text title">Updates & News</div>
-          <div class="update-filters">
-            <button class="update-filter-btn basic-text subtitle active" data-filter="all">#All</button>
-            <button class="update-filter-btn basic-text subtitle" data-filter="achievement">#Achievement</button>
-            <button class="update-filter-btn basic-text subtitle" data-filter="lab-news">#LabNews</button>
-            <button class="update-filter-btn basic-text subtitle" data-filter="announcement">#Announcement</button>
-          </div>
-          <div class="updates-container basic-text text">
-            <ul class="updates-list">
-              <li class="update-item" data-category="achievement">
-                <span class="update-date">2025. 06.</span>
-                <span class="update-content">석사과정 OOO 학생의 논문이 AAA 저널에 게재되었습니다.</span>
-                <span class="update-tag">#Achievement</span>
-              </li>
-              <li class="update-item" data-category="achievement">
-                <span class="update-date">2025. 06.</span>
-                <span class="update-content">석사과정 OOO 학생의 논문이 AAA 저널에 게재되었습니다.</span>
-                <span class="update-tag">#Achievement</span>
-              </li>
-              <li class="update-item" data-category="achievement">
-                <span class="update-date">2025. 05.</span>
-                <span class="update-content">BBB 전시에 OOO, XXX 학생의 작품이 선정되었습니다.</span>
-                <span class="update-tag">#Achievement</span>
-              </li>
-              <li class="update-item" data-category="lab-news">
-                <span class="update-date">2025. 03.</span>
-                <span class="update-content">2025년도 봄학기 신입생 OOO, XXX 학생을 환영합니다.</span>
-                <span class="update-tag">#Lab News</span>
-              </li>
-              <li class="update-item" data-category="announcement">
-                <span class="update-date">2025. 03.</span>
-                <span class="update-content">제네레이티브미디어아트 연구실이 시작되었습니다.</span>
-                <span class="update-tag">#Announcement</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-    </div>
-
-
-
-    <script>
-
-      const mountSection = (url, mountId) => (
-        fetch(url)
-          .then(res => res.text())
-          .then(html => {
-            const mountNode = document.getElementById(mountId);
-            if (mountNode) {
-              mountNode.innerHTML = html;
-            }
-          })
-      );
-
-      Promise.all([
-        mountSection('html/works.html', 'worksMount'),
-        mountSection('html/people.html', 'peopleMount')
-      ]).finally(() => {
-        window.dispatchEvent(new Event('site:sections-mounted'));
-      });
-
-    </script>
-
-
-    <script>
-      (() => {
-        const worksOverlay = document.getElementById('worksGlobalLoadingOverlay');
-        if (!worksOverlay) return;
-
-        const showWorksOverlay = () => {
-          worksOverlay.classList.remove('is-hidden');
-        };
-
-        const hideWorksOverlay = () => {
-          worksOverlay.classList.add('is-hidden');
-        };
-
-        const isWorksReadyFromDom = () => {
-          const projectTrack = document.getElementById('projectTrack');
-          if (!projectTrack) return false;
-
-          const hasRenderedTrackChildren = projectTrack.children.length > 0;
-          const firstMainImage = projectTrack.querySelector('.project-slide .project-image');
-          const isFirstMainImageLoaded = Boolean(
-            firstMainImage
-            && firstMainImage.getAttribute('src')
-            && firstMainImage.complete
-            && firstMainImage.naturalWidth > 0
-          );
-
-          return hasRenderedTrackChildren || isFirstMainImageLoaded;
-        };
-
-        const handleWorksNavIntent = (event) => {
-          const link = event.target.closest('a[href="#works"]');
-          if (!link) return;
-          if (isWorksReadyFromDom()) {
-            hideWorksOverlay();
-            return;
-          }
-          showWorksOverlay();
-        };
-
-        document.addEventListener('click', handleWorksNavIntent, true);
-
-        window.addEventListener('hashchange', () => {
-          if (window.location.hash === '#works') {
-            if (isWorksReadyFromDom()) {
-              hideWorksOverlay();
-              return;
-            }
-            showWorksOverlay();
-          }
-        });
-
-        if (window.location.hash === '#works') {
-          if (isWorksReadyFromDom()) {
-            hideWorksOverlay();
-          } else {
-            showWorksOverlay();
-          }
-        }
-
-        window.addEventListener('works:initial-loading-start', showWorksOverlay);
-        window.addEventListener('works:initial-loading-complete', hideWorksOverlay);
-      })();
-    </script>
-
-    <script type="module" src="js/3d_script.js"></script>
-    <script defer src="js/section_animation.js"></script>
-    <script defer src="js/mobilemenu.js"></script>
-    <script defer src="js/text_animation.js"></script>
-    <script defer src="js/carousels.js"></script>
-    <script defer src="js/update_filter.js"></script>
-
-    <div id="imageModal" class="modal">
-      <span class="close-btn">&times;</span>
-      <img class="modal-content" id="modalImage">
-    </div>
-
-    <script>
-      const modal = document.getElementById("imageModal");
-      const modalImg = document.getElementById("modalImage");
-      const closeBtn = document.querySelector(".close-btn");
-
-      document.addEventListener('click', (event) => {
-        if (!event.target.classList.contains('project-image')) return;
-        modal.style.display = "block";
-        modalImg.src = event.target.dataset.fullImage || event.target.src;
-      });
-
-      closeBtn.onclick = function () {
-        modal.style.display = "none";
-      }
-
-      window.onclick = function (event) {
-        if (event.target == modal) {
-          modal.style.display = "none";
-        }
-      }
-    </script>
-
-
+  </div>
+  <script type="module" src="js/3d_script.js"></script>
+  <script defer src="js/section_animation.js"></script>
+  <script defer src="js/mobilemenu.js"></script>
+  <script defer src="js/text_animation.js"></script>
 </body>
-
 </html>

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   closeBtn?.addEventListener('click', () => toggleMenu(false));
 
   const allNavLinks = document.querySelectorAll('.mobile-nav a, .nav-bottom a');
-  const validHashes = new Set(Array.from(allNavLinks, (link) => link.getAttribute('href')));
+  const validHashes = new Set(Array.from(allNavLinks, (link) => link.getAttribute('href')).filter(href => href.startsWith('#')));
 
   const normalizeHash = (rawHash) => {
     if (!rawHash) return '';
@@ -60,8 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
   /* 메뉴 항목 클릭 시 닫기 + 해시 라우팅 */
   mobileNav.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', (e) => {
-      e.preventDefault();
       const targetHash = link.getAttribute('href');
+      if (!targetHash.startsWith('#')) return;
+      e.preventDefault();
 
       toggleMenu(false);
 
