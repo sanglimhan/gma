@@ -41,7 +41,7 @@ body { background: var(--ground); color: var(--ink); }
   animation-play-state: paused;
   will-change: transform;
 }
-.copy { flex: none; padding-right: 2ch; transform: translateY(-.03em); }
+.copy { flex: none; padding-right: .7em; transform: translateY(-.03em); }
 .glyph {
   display: inline-block;
   width: .6em;
@@ -49,12 +49,17 @@ body { background: var(--ground); color: var(--ink); }
   font-weight: var(--weight, 400);
   animation: weight-shift var(--weight-duration, 4s) ease-in-out
     var(--weight-delay, 0s) infinite alternate,
-    spacing-shift var(--spacing-duration, 5s) ease-in-out
-    var(--spacing-delay, 0s) infinite alternate;
+    character-sway var(--sway-duration, 2s) ease-in-out
+    var(--sway-delay, 0s) infinite alternate;
 }
-@keyframes spacing-shift {
-  from { margin-right: calc(var(--spacing, 0em) - var(--spacing-shift, 0em)); }
-  to { margin-right: calc(var(--spacing, 0em) + var(--spacing-shift, 0em)); }
+.glyph.space {
+  width: .22em;
+  margin-right: 0;
+  animation: none;
+}
+@keyframes character-sway {
+  from { transform: translateX(calc(0em - var(--sway, .25em))); }
+  to { transform: translateX(var(--sway, .25em)); }
 }
 @keyframes weight-shift {
   0%, 15% { font-weight: 100; }
