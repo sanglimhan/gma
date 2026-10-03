@@ -28,7 +28,7 @@ body { background: var(--ground); color: var(--ink); }
   display: flex;
   flex: none;
   width: max-content;
-  font-family: "Roboto Mono", monospace;
+  font-family: "IBM Plex Sans", Arial, sans-serif;
   font-size: 12.9vh;
   font-size: 12.9svh;
   font-weight: 400;
@@ -44,11 +44,12 @@ body { background: var(--ground); color: var(--ink); }
 .copy { flex: none; padding-right: .7em; transform: translateY(-.03em); }
 .glyph {
   display: inline-block;
-  width: .6em;
-  margin-right: var(--spacing, 0em);
+  width: var(--advance, 1em);
+  text-align: center;
+  margin-right: var(--spacing, .16em);
   font-weight: var(--weight, 400);
-  animation: weight-shift var(--weight-duration, 4s) ease-in-out
-    var(--weight-delay, 0s) infinite alternate,
+  animation: weight-shift var(--weight-duration, 4s) steps(1, end)
+    var(--weight-delay, 0s) infinite,
     character-sway var(--sway-duration, 2s) ease-in-out
     var(--sway-delay, 0s) infinite alternate;
 }
@@ -58,17 +59,21 @@ body { background: var(--ground); color: var(--ink); }
   animation: none;
 }
 @keyframes character-sway {
-  from { transform: translateX(calc(0em - var(--sway, .25em))); }
-  to { transform: translateX(var(--sway, .25em)); }
+  from { transform: translateX(calc(0em - var(--sway, .08em))); }
+  to { transform: translateX(var(--sway, .08em)); }
 }
 @keyframes weight-shift {
-  0%, 15% { font-weight: 100; }
-  85%, 100% { font-weight: 700; }
+  0%, 100% { font-weight: 100; }
+  16% { font-weight: 700; }
+  35% { font-weight: 200; }
+  52% { font-weight: 500; }
+  74% { font-weight: 300; }
+  88% { font-weight: 600; }
 }
 .reverse .track { animation-direction: reverse; }
 .ready .track { animation-play-state: running; }
-.marquee:focus .track,
-.marquee:focus .glyph,
+.marquee:focus-visible .track,
+.marquee:focus-visible .glyph,
 .paused .glyph,
 .paused .track { animation-play-state: paused; }
 .marquee:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
