@@ -96,7 +96,9 @@
     lastTime = now;
     states.forEach(state => {
       const boost = 1 + 1.2 * Math.max(0, Math.min(1, (state.boostUntil - now) / 1100));
-      const target = state.direction * baseSpeed() * (state.hovered ? .22 : 1) * boost;
+      // Let the click impulse remain visible even while the pointer stays on the row.
+      const hoverFactor = state.hovered && now >= state.boostUntil ? .22 : 1;
+      const target = state.direction * baseSpeed() * hoverFactor * boost;
       state.velocity += (target - state.velocity) * (1 - Math.exp(-dt / .18));
       if (state.width > 0) {
         state.phase = ((state.phase - state.velocity * dt / state.width) % 1 + 1) % 1;
