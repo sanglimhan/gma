@@ -79,8 +79,9 @@ function setupLights() {
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
     
-    // Original four-color palette rotated 180 degrees in HSL; saturation and lightness preserved.
-    const lightColors = [0x69ffb4, 0xff0080, 0xff9933, 0x005aff];
+    // Redistribute green/blue between two lights while preserving the total RGB.
+    // This cools the green shadow cast while retaining the unshadowed ground tone.
+    const lightColors = [0x69b4ff, 0xff4b35, 0xff9933, 0x005aff];
     lightColors.forEach((color, i) => {
         const directionalLight = new THREE.DirectionalLight(color, 0.4);
         const angle = baseLightAngles[i];
