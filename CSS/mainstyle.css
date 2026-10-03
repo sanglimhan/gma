@@ -1168,3 +1168,17 @@ section {
     font-size: 0.7em;
   }
 }
+
+/* Standalone intro: full viewport, without space reserved for site chrome. */
+.intro-only .section-container,
+.intro-only .section-box {
+  height: 100vh;
+  height: 100svh;
+}
+.intro-only .section-box {
+  padding-top: 0;
+  justify-content: center;
+}
+.intro-only .intro-section {
+  height: 100%;
+}
