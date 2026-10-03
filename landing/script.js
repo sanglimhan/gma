@@ -15,11 +15,11 @@
       glyph.textContent = character;
       if (!isSpace) {
         // Move every character symmetrically without changing the measured loop width.
-        glyph.style.setProperty("--sway", (.18 + Math.random() * .20).toFixed(3) + "em");
+        glyph.style.setProperty("--sway", (.06 + Math.random() * .04).toFixed(3) + "em");
         glyph.style.setProperty("--sway-duration", (1.1 + Math.random() * 1.7).toFixed(2) + "s");
         glyph.style.setProperty("--sway-delay", (-Math.random() * 8).toFixed(2) + "s");
-        glyph.style.setProperty("--weight", String(100 + Math.floor(Math.random() * 601)));
-        glyph.style.setProperty("--spacing", (-.03 + Math.random() * .07).toFixed(3) + "em");
+        glyph.style.setProperty("--weight", String(100 * (1 + Math.floor(Math.random() * 7))));
+        glyph.style.setProperty("--spacing", (.16 + Math.random() * .02).toFixed(3) + "em");
         glyph.style.setProperty("--weight-duration", (2.5 + Math.random() * 5).toFixed(2) + "s");
         glyph.style.setProperty("--weight-delay", (-Math.random() * 15).toFixed(2) + "s");
       }
@@ -35,8 +35,32 @@
     row.querySelector(".track").appendChild(duplicate);
   });
 
+
+  // Reserve each character's widest advance across every displayed weight.
+  // Fixed slots preserve the loop width while discrete weights and sway change.
+  function sizeCharacters() {
+    const context = document.createElement("canvas").getContext("2d");
+    if (!context) return;
+    const widths = new Map();
+    poster.querySelectorAll(".glyph:not(.space)").forEach(glyph => {
+      const character = glyph.textContent;
+      if (!widths.has(character)) {
+        let width = 0;
+        for (let weight = 100; weight <= 700; weight += 100) {
+          context.font = weight + ' 100px "IBM Plex Sans", Arial, sans-serif';
+          const metrics = context.measureText(character);
+          width = Math.max(width, metrics.width,
+            (metrics.actualBoundingBoxLeft || 0) + (metrics.actualBoundingBoxRight || 0));
+        }
+        widths.set(character, (width / 100 + .02).toFixed(4) + "em");
+      }
+      glyph.style.setProperty("--advance", widths.get(character));
+    });
+    measure();
+  }
+
   function measure() {
-    const speed = Math.max(12, Math.min(24, innerWidth * .02));
+    const speed = Math.max(28, Math.min(48, innerWidth * .04));
     rows.forEach((row, index) => {
       const duration = row.querySelector(".copy").getBoundingClientRect().width / speed;
       row.style.setProperty("--duration", duration + "s");
@@ -49,13 +73,14 @@
     rows.forEach((row, index) => row.setAttribute("aria-label",
       "Lab identity, row " + (index + 1) + (motion.matches
         ? ". Scroll horizontally to read."
-        : ". Focus to pause.")));
+        : ". Tab to pause.")));
     measure();
   }
   addEventListener("resize", measure, { passive: true });
   document.addEventListener("visibilitychange", sync);
   if (motion.addEventListener) motion.addEventListener("change", sync);
   else motion.addListener(sync);
-  if (document.fonts) document.fonts.ready.then(measure);
+  if (document.fonts) document.fonts.ready.then(sizeCharacters);
+  sizeCharacters();
   sync();
 })();
