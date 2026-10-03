@@ -5,14 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#171a78">
   <title>Generative Media Art Lab + Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100..700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <main class="marquee" tabindex="0" aria-label="Scrolling lab identity. Focus to pause.">
-    <h1 class="track" aria-label="GENERATIVE MEDIA ART LAB + STUDIO, GSAIM, CHUNG-ANG UNIV. SEOUL, KOREA">
-      <span class="copy" aria-hidden="true">GENERATIVE MEDIA ART LAB + STUDIO  ·  GSAIM  ·  CHUNG-ANG UNIV. SEOUL, KOREA</span>
-      <span class="copy" aria-hidden="true">GENERATIVE MEDIA ART LAB + STUDIO  ·  GSAIM  ·  CHUNG-ANG UNIV. SEOUL, KOREA</span>
-    </h1>
+  <main class="poster" aria-labelledby="title">
+    <h1 id="title" class="sr-only">GENERATIVE MEDIA ART LAB + STUDIO, GSAIM, CHUNG-ANG UNIV. SEOUL, KOREA</h1>
+    <div class="marquee" tabindex="0" role="region" aria-label="Lab identity, row 1. Focus to pause.">
+      <div class="track"><span class="copy">GENERATIVE MEDIA ART LAB + STUDIO  ·  GSAIM  ·  CHUNG-ANG UNIV. SEOUL, KOREA</span></div>
+    </div>
+    <div class="marquee reverse" tabindex="0" role="region" aria-label="Lab identity, row 2. Focus to pause.">
+      <div class="track"><span class="copy">GENERATIVE MEDIA ART LAB + STUDIO  ·  GSAIM  ·  CHUNG-ANG UNIV. SEOUL, KOREA</span></div>
+    </div>
+    <div class="marquee" tabindex="0" role="region" aria-label="Lab identity, row 3. Focus to pause.">
+      <div class="track"><span class="copy">GENERATIVE MEDIA ART LAB + STUDIO  ·  GSAIM  ·  CHUNG-ANG UNIV. SEOUL, KOREA</span></div>
+    </div>
   </main>
   <script src="./script.js"></script>
 </body>
