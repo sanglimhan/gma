@@ -1,40 +1,53 @@
 :root {
   --ground: #171a78;
   --ink: #f6f3e7;
-  --duration: 180s;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; width: 100%; height: 100%; }
 body { background: var(--ground); color: var(--ink); }
-.marquee {
-  display: flex;
-  align-items: center;
+.poster {
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   width: 100%;
   height: 100%;
   height: 100svh;
   overflow: hidden;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.marquee { display: flex; align-items: center; overflow: hidden; min-height: 0; }
 .track {
   display: flex;
   flex: none;
   width: max-content;
-  margin: 0;
-  font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
-  font-size: 80vh;
-  font-size: 80svh;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -.055em;
+  font-family: "Roboto Mono", monospace;
+  font-size: 26vh;
+  font-size: 26svh;
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1.2;
+  letter-spacing: -.045em;
   white-space: nowrap;
-  animation: flow var(--duration) linear infinite;
+  animation: flow var(--duration, 120s) linear infinite;
+  animation-delay: var(--delay, 0s);
   animation-play-state: paused;
   will-change: transform;
 }
-.copy { flex: none; padding-right: 1em; }
+.copy { flex: none; padding-right: 2ch; }
+.glyph { font-weight: var(--weight, 400); }
+.reverse .track { animation-direction: reverse; }
 .ready .track { animation-play-state: running; }
 .marquee:focus .track,
 .paused .track { animation-play-state: paused; }
-.marquee:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
+.marquee:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
 @keyframes flow {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
