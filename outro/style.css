@@ -1,9 +1,9 @@
 /*---Global---*/
 :root {
-  --main-color: #448844;
-  --text-dark: #224422;
+  --main-color: #0000FF;
+  --text-dark: #0000FF;
   font-size: 16px;
-  --wireframe-color: #448844;
+  --wireframe-color: #FF00FF;
 }
 
 html,
