@@ -8,11 +8,23 @@
     const copy = row.querySelector(".copy");
     const phrase = copy.textContent;
     const fragment = document.createDocumentFragment();
-    for (const character of phrase) {
+    const characters = [...phrase];
+    let spacingPair;
+    for (const [index, character] of characters.entries()) {
+      if (index % 2 === 0) {
+        spacingPair = {
+          shift: index + 1 < characters.length ? .035 + Math.random() * .055 : 0,
+          duration: (3 + Math.random() * 5).toFixed(2) + "s",
+          delay: (-Math.random() * 16).toFixed(2) + "s"
+        };
+      }
       const glyph = document.createElement("span");
       glyph.className = "glyph";
       glyph.textContent = character;
-      // Fixed spacing and advance keep the loop stable while variable weight animates.
+      // Adjacent gaps expand/contract in opposite phases, keeping the loop width constant.
+      glyph.style.setProperty("--spacing-shift", String(spacingPair.shift * (index % 2 ? -1 : 1)) + "em");
+      glyph.style.setProperty("--spacing-duration", spacingPair.duration);
+      glyph.style.setProperty("--spacing-delay", spacingPair.delay);
       glyph.style.setProperty("--weight", String(100 + Math.floor(Math.random() * 601)));
       glyph.style.setProperty("--spacing", ((Math.random() * .24) - .10).toFixed(3) + "em");
       glyph.style.setProperty("--weight-duration", (2.5 + Math.random() * 5).toFixed(2) + "s");
