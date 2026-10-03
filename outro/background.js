@@ -141,7 +141,8 @@ function createWorldObjects() {
     world.addBody(groundBody);
     const groundGeo = new THREE.PlaneGeometry(frustumWidth * 2, frustumHeight * 2);
     const groundMat = new THREE.MeshStandardMaterial({
-        color: 0xDDDDDD, side: THREE.DoubleSide,
+        // Compensate the lighting's lilac cast toward the surrounding #EAD1DC frame.
+        color: 0xE4E2D7, side: THREE.DoubleSide,
         roughness: ROUGHNESS,
         metalness: METALNESS
     });
