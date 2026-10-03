@@ -1,76 +1,46 @@
 :root {
   --ground: #171a78;
   --ink: #f6f3e7;
-  --px: 0;
-  --py: 0;
+  --duration: 180s;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; width: 100%; height: 100%; }
 body { background: var(--ground); color: var(--ink); }
-.poster {
+.marquee {
+  display: flex;
+  align-items: center;
+  width: 100%;
   height: 100%;
   height: 100svh;
-  min-height: 240px;
-  display: grid;
-  grid-template-rows: 3fr 1fr;
-  gap: clamp(4px, 1vh, 12px);
-  padding: clamp(8px, 1.4vw, 24px) clamp(6px, 1vw, 18px);
   overflow: hidden;
 }
-.title {
-  display: grid;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: clamp(2px, .5vh, 6px);
+.track {
+  display: flex;
+  flex: none;
+  width: max-content;
   margin: 0;
-  min-height: 0;
-}
-.row {
-  display: block;
-  min-width: 0;
-  min-height: 0;
-  margin: 0;
-  position: relative;
-}
-.row svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.row text {
-  fill: currentColor;
   font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
-  font-size: 180px;
+  font-size: 80vh;
+  font-size: 80svh;
   font-weight: 900;
-  letter-spacing: -5px;
+  line-height: 1;
+  letter-spacing: -.055em;
+  white-space: nowrap;
+  animation: flow var(--duration) linear infinite;
+  animation-play-state: paused;
+  will-change: transform;
 }
-.identity {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(12px, 2vw, 32px);
-  min-height: 0;
-}
-.location {
-  display: grid;
-  grid-template-rows: 1fr 1fr;
-  gap: 4px;
-  min-width: 0;
-  min-height: 0;
-}
-.row-one { transform: translate(calc(var(--px) * -7px), calc(var(--py) * 2px)); }
-.row-two { transform: translate(calc(var(--px) * 10px), calc(var(--py) * -3px)); }
-.row-three { transform: translate(calc(var(--px) * -5px), calc(var(--py) * 3px)); }
-.acronym { transform: translate(calc(var(--px) * 4px), calc(var(--py) * -2px)); }
-.location { transform: translate(calc(var(--px) * -3px), calc(var(--py) * 2px)); }
-.row-one svg { animation: breathe 11s ease-in-out infinite alternate; }
-.row-two svg { animation: breathe 13s ease-in-out -4s infinite alternate-reverse; }
-.row-three svg { animation: breathe 15s ease-in-out -8s infinite alternate; }
-@keyframes breathe {
-  from { transform: translateX(-.25%) scaleX(.992); }
-  to { transform: translateX(.25%) scaleX(1.002); }
-}
-@media (max-aspect-ratio: 3/4) {
-  .poster { grid-template-rows: 3fr 2fr; padding: 14px 8px; gap: 12px; }
-  .identity { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 12px; }
-  .location { gap: 6px; }
-  .title { gap: 8px; }
+.copy { flex: none; padding-right: 1em; }
+.ready .track { animation-play-state: running; }
+.marquee:focus .track,
+.paused .track { animation-play-state: paused; }
+.marquee:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
+@keyframes flow {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .row, .location, .row svg { transform: none; animation: none; }
+  .marquee { overflow-x: auto; }
+  .track { animation: none; transform: none; will-change: auto; }
+  .copy + .copy { display: none; }
 }
-.poster.paused .row svg { animation-play-state: paused; }
