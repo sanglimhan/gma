@@ -16,7 +16,7 @@
       if (!isSpace) {
         // Move every character symmetrically without changing the measured loop width.
         glyph.style.setProperty("--sway", (.06 + Math.random() * .04).toFixed(3) + "em");
-        glyph.style.setProperty("--sway-duration", (1.1 + Math.random() * 1.7).toFixed(2) + "s");
+        glyph.style.setProperty("--sway-duration", (.55 + Math.random() * .85).toFixed(2) + "s");
         glyph.style.setProperty("--sway-delay", (-Math.random() * 8).toFixed(2) + "s");
         glyph.style.setProperty("--weight", String(100 * (1 + Math.floor(Math.random() * 7))));
         glyph.style.setProperty("--spacing", (.16 + Math.random() * .02).toFixed(3) + "em");
