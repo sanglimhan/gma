@@ -79,7 +79,8 @@ function setupLights() {
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
     
-    const lightColors = [0xff69b4, 0xffb6d5, 0xc8b6ff, 0xfff0e8];
+    // Original four-color palette rotated 180 degrees in HSL; saturation and lightness preserved.
+    const lightColors = [0x69ffb4, 0xff0080, 0xff9933, 0x005aff];
     lightColors.forEach((color, i) => {
         const directionalLight = new THREE.DirectionalLight(color, 0.4);
         const angle = baseLightAngles[i];
